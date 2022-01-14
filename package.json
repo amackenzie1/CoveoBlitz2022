@@ -13,6 +13,7 @@
   "license": "MIT",
   "dependencies": {
     "@types/ws": "6.0.4",
+    "ts-priority-queue": "^0.1.1",
     "typescript": "3.9.7",
     "ws": "7.2.1"
   }
