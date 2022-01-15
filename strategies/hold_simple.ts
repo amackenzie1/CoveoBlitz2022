@@ -1,34 +1,7 @@
 import { Strategy } from '../strategy-coordinator'
 import { Action, GameMessage, TileType, Diamond, Position, Unit, Team } from '../GameInterface'
-import { randomNeighbor, areEqual, stringify, l1Distance, allNeighbors, noop, freeNeighbors, hasClearLOS, getTeamsWithHigherPriorityNextRound, NEIGHBORS, add } from '../utils'
+import { randomNeighbor, areEqual, stringify, l1Distance, allNeighbors, noop, freeNeighbors, hasClearLOS, getTeamsWithHigherPriorityNextRound, NEIGHBORS, add, isVineable } from '../utils'
 import { computeDistance, dijkstra } from "../search"
-
-const NEIGHBORS_AND_SELF = [...NEIGHBORS, { x: 0, y: 0 }]
-
-function isVineable(unitPosition: Position, team: Team, state: GameMessage) {
-  let badTeamIds = getTeamsWithHigherPriorityNextRound(team.id, state)
-  let enemyTeams = badTeamIds.map(id => state.teams.find(t => t.id === id)).filter(t => t)
-  let enemyPositions = enemyTeams
-    .flatMap(t => t!.units)
-    .filter(u => !u.hasDiamond && u.hasSpawned)
-    .map(u => u.position)
-
-  const enemyPositionSet = new Set(enemyPositions.map(x => stringify(x)))
-
-  for (let direction of NEIGHBORS) {
-    let position = unitPosition
-    do {
-      position = add(position, direction)
-      for (let offset of NEIGHBORS_AND_SELF) {
-        let neighbor = add(position, offset)
-        if (enemyPositionSet.has(stringify(neighbor))) {
-          return true
-        }
-      }
-    }
-    while (state.getTileTypeAt(position) === "EMPTY")
-  }
-}
 
 
 const getSafePosition = (unit: Unit, team: Team, state: GameMessage, enemyPositions: Position[]): [Position, number] | null => {

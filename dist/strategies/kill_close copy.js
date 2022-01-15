@@ -1,6 +1,5 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const search_1 = require("../search");
 const utils_1 = require("../utils");
 const killClose = (units, team, state) => {
     units = units.filter(x => x.hasSpawned && !x.hasDiamond);
@@ -11,20 +10,20 @@ const killClose = (units, team, state) => {
         .filter(u => u.hasSpawned && u.hasDiamond)
         .map(u => u.position);
     const actions = [];
+    const attackedPositions = [];
     for (let unit of units) {
-        const result = search_1.dijkstra([unit.position], pos => !!enemyPositions.find(pos2 => utils_1.areEqual(pos, pos2)), { state, max: 3 });
-        if (!result) {
-            continue;
+        const closeTarget = enemyPositions.find(pos => utils_1.l1Distance(pos, unit.position) === 1);
+        if (closeTarget && !attackedPositions.some(pos => utils_1.areEqual(pos, closeTarget))) {
+            actions.push({
+                type: 'UNIT',
+                action: 'ATTACK',
+                target: closeTarget,
+                unitId: unit.id
+            });
+            attackedPositions.push(closeTarget);
         }
-        const { nextTarget, distance } = result;
-        actions.push({
-            type: 'UNIT',
-            action: distance <= 1 ? 'ATTACK' : 'MOVE',
-            target: nextTarget,
-            unitId: unit.id
-        });
     }
     return actions;
 };
 exports.default = killClose;
-//# sourceMappingURL=kill_close.js.map
+//# sourceMappingURL=kill_close copy.js.map

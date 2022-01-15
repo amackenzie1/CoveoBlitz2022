@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getTeamsWithLowerPriorityThisRound = exports.getTeamsWithHigherPriorityNextRound = exports.getAllUnits = exports.noop = exports.l1Distance = exports.stringify = exports.freeNeighbors = exports.allNeighbors = exports.randomNeighbor = exports.NEIGHBORS = exports.areEqual = exports.add = exports.hasClearLOS = void 0;
+exports.isVineable = exports.getVineRegion = exports.getTeamsWithLowerPriorityThisRound = exports.getTeamsWithHigherPriorityNextRound = exports.getAllUnits = exports.noop = exports.l1Distance = exports.stringify = exports.freeNeighbors = exports.allNeighbors = exports.randomNeighbor = exports.NEIGHBORS = exports.areEqual = exports.add = exports.hasClearLOS = void 0;
 const add = (a, b) => {
     return {
         x: a.x + b.x,
@@ -114,4 +114,39 @@ function getTeamsWithLowerPriorityThisRound(myTeamId, state) {
     return lowerPriority;
 }
 exports.getTeamsWithLowerPriorityThisRound = getTeamsWithLowerPriorityThisRound;
+function getVineRegion(center, state) {
+    const region = [];
+    for (let dir of NEIGHBORS) {
+        let position = add(center, dir);
+        while (state.getTileTypeAt(position) === 'EMPTY') {
+            region.push(position);
+            position = add(position, dir);
+        }
+    }
+    return region;
+}
+exports.getVineRegion = getVineRegion;
+const NEIGHBORS_AND_SELF = [...NEIGHBORS, { x: 0, y: 0 }];
+function isVineable(unitPosition, team, state) {
+    let badTeamIds = getTeamsWithHigherPriorityNextRound(team.id, state);
+    let enemyTeams = badTeamIds.map(id => state.teams.find(t => t.id === id)).filter(t => t);
+    let enemyPositions = enemyTeams
+        .flatMap(t => t.units)
+        .filter(u => !u.hasDiamond && u.hasSpawned)
+        .map(u => u.position);
+    const enemyPositionSet = new Set(enemyPositions.map(x => stringify(x)));
+    for (let direction of NEIGHBORS) {
+        let position = unitPosition;
+        do {
+            position = add(position, direction);
+            for (let offset of NEIGHBORS_AND_SELF) {
+                let neighbor = add(position, offset);
+                if (enemyPositionSet.has(stringify(neighbor))) {
+                    return true;
+                }
+            }
+        } while (state.getTileTypeAt(position) === "EMPTY");
+    }
+}
+exports.isVineable = isVineable;
 //# sourceMappingURL=utils.js.map

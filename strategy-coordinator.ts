@@ -1,8 +1,9 @@
 import { Unit, Action, GameMessage, Team } from './GameInterface'
 import { l1Distance, stringify } from './utils'
+import { InsightsProvider } from './insights'
 
-type Strategy = (units: Unit[], crew: Team, state: GameMessage) => Action[]
-type GetStrategies = (state: GameMessage) => [Strategy, string][]
+type Strategy = (units: Unit[], crew: Team, state: GameMessage, insights: InsightsProvider) => Action[]
+type GetStrategies = (state: GameMessage) => (false | [Strategy, string])[]
 
 class StrategyCoordinator {
   public logs: string[][] = []
@@ -10,7 +11,7 @@ class StrategyCoordinator {
     private getStrategies: GetStrategies,
   ) { }
 
-  tick(state: GameMessage): Action[] {
+  tick(state: GameMessage, insights: InsightsProvider): Action[] {
     const team = state.teams.find(x => x.id === state.teamId)
     if (!team) {
       console.error(`\n\n\n\nCOULDN'T FIND OUR TEAM ${state.teamId}\n\n\n\n`)
@@ -22,8 +23,11 @@ class StrategyCoordinator {
 
     const logs: string[] = []
     const allActions: Action[][] = []
-    for (let [strategy, name] of strategies) {
-      const actions = strategy(units, team, state)
+    for (let obj of strategies) {
+      if (!obj) { continue }
+      const [strategy, name] = obj
+      //console.log(`Current strategy: ${name}`)
+      const actions = strategy(units, team, state, insights)
       const isOk = validateNoCoveoPathfinding(actions, units)
       if (!isOk) {
         logs.push(`Strategy ${name} tried to use COVEO pathfinding`)

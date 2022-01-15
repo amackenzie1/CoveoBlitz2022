@@ -1,8 +1,7 @@
 import { Strategy } from '../strategy-coordinator'
 import { Action, TileType, Diamond, Position, Unit, GameMessage } from '../GameInterface'
-import { randomNeighbor, areEqual, stringify, getAllUnits, getTeamsWithHigherPriorityNextRound, l1Distance, noop } from '../utils'
-import { dijkstra } from "../search"
-
+import { randomNeighbor, areEqual, stringify, getAllUnits, getTeamsWithHigherPriorityNextRound, noop } from '../utils'
+import { dijkstra, computeDistance } from "../search"
 
 const grabDiamonds: Strategy = (units, team, state) => {
     units = units.filter(x => x.hasSpawned && !x.hasDiamond)
@@ -18,8 +17,10 @@ const grabDiamonds: Strategy = (units, team, state) => {
 
     for (let unit of units) {
         let returned = dijkstra([unit.position], hasDiamond, { state })
-        console.log(`Couldn't find path from ${stringify(unit.position)} to diamonds ${JSON.stringify(diamonds.map(x => x.position))}`)
-        if (!returned || !returned.endTarget) { continue }
+        if (!returned || !returned.endTarget) {
+            console.log(`Couldn't find path from ${stringify(unit.position)} to diamonds ${JSON.stringify(diamonds.map(x => x.position))}`)
+            continue
+        }
         let { nextTarget, endTarget, distance } = returned;
         diamonds = diamonds.filter((diamond) => !areEqual(diamond.position, endTarget));
 
@@ -30,7 +31,7 @@ const grabDiamonds: Strategy = (units, team, state) => {
                 .filter(t => badTeams.includes(t.id))
                 .flatMap(t => t.units)
                 .filter(u => u.hasSpawned && !u.hasDiamond)
-                .filter(u => l1Distance(u.position, endTarget) == 2)
+                .filter(u => computeDistance(u.position, endTarget, { state }) == 2)
 
             if (badUnits.length) {
                 actions.push(noop(unit))

@@ -1,6 +1,6 @@
 import { Strategy } from '../strategy-coordinator'
 import { Action, Team, GameMessage, Position, Unit, Diamond } from '../GameInterface'
-import { stringify } from '../utils'
+import { stringify, isVineable } from '../utils'
 import { dijkstra } from "../search";
 
 function getEnemies(team: Team, state: GameMessage) {
@@ -42,6 +42,7 @@ const summonStrategy: Strategy = (units, team, state) => {
     const ticksLeft = state.totalTick - state.tick
     let actions: Action[] = [];
     for (let [unit, ticksRequired] of unitsWithTicks) {
+        if (isVineable(unit.position, team, state)) {continue}
         if (ticksRequired + 1 > ticksLeft) { continue }
 
         const returned = dijkstra([unit.position], hasEnemy, {

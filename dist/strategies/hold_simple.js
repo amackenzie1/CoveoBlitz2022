@@ -2,33 +2,11 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const utils_1 = require("../utils");
 const search_1 = require("../search");
-const NEIGHBORS_AND_SELF = [...utils_1.NEIGHBORS, { x: 0, y: 0 }];
-function isVineable(unitPosition, team, state) {
-    let badTeamIds = utils_1.getTeamsWithHigherPriorityNextRound(team.id, state);
-    let enemyTeams = badTeamIds.map(id => state.teams.find(t => t.id === id)).filter(t => t);
-    let enemyPositions = enemyTeams
-        .flatMap(t => t.units)
-        .filter(u => !u.hasDiamond && u.hasSpawned)
-        .map(u => u.position);
-    const enemyPositionSet = new Set(enemyPositions.map(x => utils_1.stringify(x)));
-    for (let direction of utils_1.NEIGHBORS) {
-        let position = unitPosition;
-        do {
-            position = utils_1.add(position, direction);
-            for (let offset of NEIGHBORS_AND_SELF) {
-                let neighbor = utils_1.add(position, offset);
-                if (enemyPositionSet.has(utils_1.stringify(neighbor))) {
-                    return true;
-                }
-            }
-        } while (state.getTileTypeAt(position) === "EMPTY");
-    }
-}
 const getSafePosition = (unit, team, state, enemyPositions) => {
     const validPositions = utils_1.freeNeighbors(unit.position, state)
         .map(pos => [pos, Math.min(...enemyPositions.map(pos2 => utils_1.l1Distance(pos, pos2)))])
         .sort(([_, a], [__, b]) => b - a)
-        .filter(([pos]) => !isVineable(pos, team, state));
+        .filter(([pos]) => !utils_1.isVineable(pos, team, state));
     return validPositions[0] || null;
 };
 const holdSimple = (units, team, state) => {

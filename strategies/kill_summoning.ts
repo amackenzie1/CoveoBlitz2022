@@ -3,14 +3,13 @@ import { Action, Diamond, Position } from '../GameInterface'
 import { a_star, dijkstra, SearchAlgorithmReturn } from "../search"
 import { freeNeighbors, hasClearLOS, getTeamsWithLowerPriorityThisRound, l1Distance, areEqual } from '../utils'
 
-const killClose: Strategy = (units, team, state) => {
+const killSummoning: Strategy = (units, team, state) => {
   units = units.filter(x => x.hasSpawned && !x.hasDiamond)
-  const weakTeams = getTeamsWithLowerPriorityThisRound(team.id, state)
 
   const enemyPositions = state.teams
-    .filter(t => weakTeams.includes(t.id))
+    .filter(t => t.id !== team.id)
     .flatMap(t => t.units)
-    .filter(u => u.hasSpawned && u.hasDiamond)
+    .filter(u => u.hasSpawned && u.hasDiamond && u.isSummoning)
     .map(u => u.position)
 
   const actions: Action[] = []
@@ -30,4 +29,4 @@ const killClose: Strategy = (units, team, state) => {
   return actions
 }
 
-export default killClose
+export default killSummoning

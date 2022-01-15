@@ -1,79 +1,115 @@
 import { Strategy } from '../strategy-coordinator'
-import { Action, Diamond, Position } from '../GameInterface'
-import { a_star, SearchAlgorithmReturn } from "../search"
-import { freeNeighbors, hasClearLOS } from '../utils'
+import { Action, Diamond, Unit, Team, GameMessage, Position } from '../GameInterface'
+import { a_star, SearchAlgorithmReturn, dijkstra } from "../search"
+import { freeNeighbors, hasClearLOS, areEqual, getVineRegion } from '../utils'
 
 function diamondValue(diamond: Diamond) {
   return diamond.summonLevel * 20 + diamond.points
 }
 
+function averageDistance(diamond: Diamond, units: Unit[], state: GameMessage) {
+  let resultToSpawn = dijkstra([diamond.position], pos => (state.getTileTypeAt(pos) === "SPAWN"), { state: state, backwards: true })
+  const distanceToSpawn = resultToSpawn ? resultToSpawn.distance : Infinity
+  let distances = []
+  for (let unit of units) {
+    let returned = a_star(unit.position, diamond.position, { state })
+    const returnedDistance = returned ? returned.distance : Infinity
+    distances.push(Math.min(returnedDistance, distanceToSpawn + 1))
+  }
+  return distances.reduce((a, b) => a + b, 0) / distances.length
+}
+
+function chooseTarget(units: Unit[], team: Team, state: GameMessage): Position | null {
+  let potentialTargets = state.map.diamonds
+    .filter(x => !x.ownerId || !team.units.find(u => u.id === x.ownerId))
+    .sort((x, y) => diamondValue(y) - diamondValue(x))
+    .slice(0, 2)
+
+  let targetsWithDistances: [Diamond, number][] = []
+  for (let target of potentialTargets) {
+    targetsWithDistances.push([target, averageDistance(target, units, state)])
+  }
+  targetsWithDistances.sort((a, b) => a[1] - b[1])
+
+  if (!targetsWithDistances || targetsWithDistances.length === 0) {
+    return null
+  }
+  return targetsWithDistances[0]![0].position
+}
+
 const wolfPack: Strategy = (units, team, state) => {
   units = units.filter(x => x.hasSpawned && !x.hasDiamond)
 
-  let diamondValues: [Diamond, number][] = []
-  for (let diamond of state.map.diamonds) {
-    if (team.units.find(x => x.id === diamond.ownerId)) { continue }
-    diamondValues.push([diamond, diamondValue(diamond)])
-  }
-  diamondValues.sort((x, y) => y[1] - x[1])
+  // let diamondValues: [Diamond, number][] = []
+  // for (let diamond of state.map.diamonds) {
+  //   if (team.units.find(x => x.id === diamond.ownerId)) { continue }
+  //   diamondValues.push([diamond, diamondValue(diamond)])
+  // }
+  // diamondValues.sort((x, y) => y[1] - x[1])
 
-  if (!diamondValues.length) { return [] }
+  // if (!diamondValues.length) { return [] }
+
+  const target = chooseTarget(units, team, state)
+  if (!target) { return [] }
+  console.log("Target chosen!")
+  const enemyPositions = state.teams
+    .filter(t => t.id !== team.id)
+    .flatMap(t => t.units)
+    .filter(u => u.hasSpawned)
+    .map(u => u.position)
+
+  const spawnPoints = state.getSpawnPoints()
+  const targetToSpawn = dijkstra(spawnPoints, pos => areEqual(pos, target), { state })?.distance || Infinity
+  const targetToEnemy = dijkstra(enemyPositions, pos => areEqual(pos, target), { state })?.distance || Infinity
+  const targetVineRegion = getVineRegion(target, state)
+  const shouldConsiderVine = Number.isFinite(targetToSpawn) && targetToSpawn + 1 < targetToEnemy
 
   let actions: Action[] = []
-  outer: for (let unit of units) {
-    let index = 0;
-    let returned
-    do {
-      const diamond = diamondValues[index]![0]
-      if (diamond.ownerId && hasClearLOS(unit.position, diamond.position, state)) {
-        actions.push({
-          type: 'UNIT',
-          action: 'VINE',
-          target: diamond.position,
-          unitId: unit.id
-        })
-        continue outer;
-      }
+  for (let unit of units) {
 
-      returned = a_star(unit.position, diamond.position, { state })
-      ++index
-    } while (!returned && index < diamondValues.length)
-    if (!returned) {
-      // Kill itself so it respawns
-      actions.push({
-        type: 'UNIT',
-        action: 'ATTACK',
-        target: unit.position,
-        unitId: unit.id
-      })
-      continue
-    }
-
-    if (returned.distance <= 1 && state.getTileTypeAt(unit.position) === 'SPAWN') {
-      // Need to get out of spawn in order to kill
-      const target = freeNeighbors(returned.endTarget, state)
-        .map<[Position, SearchAlgorithmReturn | null]>(pos => [pos, a_star(unit.position, pos, { state })])
-        .filter(([_, result]) => result !== null)
-        .sort(([_, a], [__, b]) => a!.distance - b!.distance)[0]?.[1]?.nextTarget
-
-      if (target) {
-        actions.push({
-          type: 'UNIT',
-          action: 'MOVE',
-          target: target,
-          unitId: unit.id
-        })
-      } else {
+    if (shouldConsiderVine) {
+      const result = dijkstra([unit.position], pos => !!targetVineRegion.find(pos2 => areEqual(pos, pos2)), { state, backwards: true })
+      if (result && result.distance < 10) {
+        if (result.distance === 0) {
+          actions.push({
+            type: 'UNIT',
+            action: 'VINE',
+            target: target,
+            unitId: unit.id
+          })
+        } else {
+          actions.push({
+            type: 'UNIT',
+            action: 'MOVE',
+            target: result.nextTarget,
+            unitId: unit.id
+          })
+        }
         continue
       }
     }
 
-    actions.push({
-      type: "UNIT",
-      action: returned.distance <= 1 ? "ATTACK" : "MOVE",
-      unitId: unit.id,
-      target: returned.nextTarget
-    })
+    const result = a_star(unit.position, target, { state})
+    if (!result) { continue }
+   
+    // Chase the target on-foot
+    let targetDiamond = state.map.diamonds.find(d => areEqual(d.position, result.endTarget))
+    if (targetDiamond?.ownerId){
+      actions.push({
+        type: 'UNIT',
+        action: result.distance <= 1 ? 'ATTACK' : 'MOVE',
+        target: result.nextTarget,
+        unitId: unit.id
+      })
+    } else {
+      actions.push({
+        type: 'UNIT',
+        action: 'MOVE',
+        target: result.nextTarget,
+        unitId: unit.id
+      })
+    }
+    
   }
   return actions
 }

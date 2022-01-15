@@ -7,7 +7,7 @@ class StrategyCoordinator {
         this.getStrategies = getStrategies;
         this.logs = [];
     }
-    tick(state) {
+    tick(state, insights) {
         const team = state.teams.find(x => x.id === state.teamId);
         if (!team) {
             console.error(`\n\n\n\nCOULDN'T FIND OUR TEAM ${state.teamId}\n\n\n\n`);
@@ -17,8 +17,13 @@ class StrategyCoordinator {
         const strategies = this.getStrategies(state);
         const logs = [];
         const allActions = [];
-        for (let [strategy, name] of strategies) {
-            const actions = strategy(units, team, state);
+        for (let obj of strategies) {
+            if (!obj) {
+                continue;
+            }
+            const [strategy, name] = obj;
+            //console.log(`Current strategy: ${name}`)
+            const actions = strategy(units, team, state, insights);
             const isOk = validateNoCoveoPathfinding(actions, units);
             if (!isOk) {
                 logs.push(`Strategy ${name} tried to use COVEO pathfinding`);

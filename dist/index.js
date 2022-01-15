@@ -19,7 +19,7 @@ webSocket.onopen = (event) => {
         webSocket.send(JSON.stringify({ type: "REGISTER", token: process.env.TOKEN }));
     }
     else {
-        webSocket.send(JSON.stringify({ type: "REGISTER", teamName: "MyBot TypeScript" }));
+        webSocket.send(JSON.stringify({ type: "REGISTER", teamName: "MyBot TypeScript Complex" }));
     }
 };
 webSocket.onmessage = (message) => {

@@ -103,4 +103,60 @@ function getTeamsWithLowerPriorityThisRound(myTeamId: string, state: GameMessage
   return lowerPriority
 }
 
-export { hasClearLOS, add, areEqual, NEIGHBORS, randomNeighbor, allNeighbors, freeNeighbors, stringify, l1Distance, noop, getAllUnits, getTeamsWithHigherPriorityNextRound, getTeamsWithLowerPriorityThisRound }
+function getVineRegion(center: Position, state: GameMessage): Position[] {
+  const region: Position[] = []
+  for (let dir of NEIGHBORS) {
+    let position = add(center, dir)
+    while (state.getTileTypeAt(position) === 'EMPTY') {
+      region.push(position)
+      position = add(position, dir)
+    }
+  }
+  return region
+}
+
+
+const NEIGHBORS_AND_SELF = [...NEIGHBORS, { x: 0, y: 0 }]
+
+function isVineable(unitPosition: Position, team: Team, state: GameMessage) {
+  let badTeamIds = getTeamsWithHigherPriorityNextRound(team.id, state)
+  let enemyTeams = badTeamIds.map(id => state.teams.find(t => t.id === id)).filter(t => t)
+  let enemyPositions = enemyTeams
+    .flatMap(t => t!.units)
+    .filter(u => !u.hasDiamond && u.hasSpawned)
+    .map(u => u.position)
+
+  const enemyPositionSet = new Set(enemyPositions.map(x => stringify(x)))
+
+  for (let direction of NEIGHBORS) {
+    let position = unitPosition
+    do {
+      position = add(position, direction)
+      for (let offset of NEIGHBORS_AND_SELF) {
+        let neighbor = add(position, offset)
+        if (enemyPositionSet.has(stringify(neighbor))) {
+          return true
+        }
+      }
+    }
+    while (state.getTileTypeAt(position) === "EMPTY")
+  }
+}
+
+export {
+  hasClearLOS,
+  add,
+  areEqual,
+  NEIGHBORS,
+  randomNeighbor,
+  allNeighbors,
+  freeNeighbors,
+  stringify,
+  l1Distance,
+  noop,
+  getAllUnits,
+  getTeamsWithHigherPriorityNextRound,
+  getTeamsWithLowerPriorityThisRound,
+  getVineRegion,
+  isVineable
+}

@@ -19,7 +19,7 @@ webSocket.onopen = (event: WebSocket.OpenEvent) => {
     );
   } else {
     webSocket.send(
-      JSON.stringify({ type: "REGISTER", teamName: "MyBot TypeScript" })
+      JSON.stringify({ type: "REGISTER", teamName: "MyBot TypeScript Complex" })
     );
   }
 };

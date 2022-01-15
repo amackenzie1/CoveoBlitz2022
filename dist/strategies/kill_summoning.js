@@ -2,13 +2,12 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const search_1 = require("../search");
 const utils_1 = require("../utils");
-const killClose = (units, team, state) => {
+const killSummoning = (units, team, state) => {
     units = units.filter(x => x.hasSpawned && !x.hasDiamond);
-    const weakTeams = utils_1.getTeamsWithLowerPriorityThisRound(team.id, state);
     const enemyPositions = state.teams
-        .filter(t => weakTeams.includes(t.id))
+        .filter(t => t.id !== team.id)
         .flatMap(t => t.units)
-        .filter(u => u.hasSpawned && u.hasDiamond)
+        .filter(u => u.hasSpawned && u.hasDiamond && u.isSummoning)
         .map(u => u.position);
     const actions = [];
     for (let unit of units) {
@@ -26,5 +25,5 @@ const killClose = (units, team, state) => {
     }
     return actions;
 };
-exports.default = killClose;
-//# sourceMappingURL=kill_close.js.map
+exports.default = killSummoning;
+//# sourceMappingURL=kill_summoning.js.map

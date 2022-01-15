@@ -40,6 +40,9 @@ const summonStrategy = (units, team, state) => {
     const ticksLeft = state.totalTick - state.tick;
     let actions = [];
     for (let [unit, ticksRequired] of unitsWithTicks) {
+        if (utils_1.isVineable(unit.position, team, state)) {
+            continue;
+        }
         if (ticksRequired + 1 > ticksLeft) {
             continue;
         }
