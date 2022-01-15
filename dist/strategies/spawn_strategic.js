@@ -8,8 +8,6 @@ const spawnUnits = (units, team, state) => {
     if (!unitsToSpawn.length) {
         return [];
     }
-    let diamonds = state.map.diamonds
-        .filter(x => !x.ownerId || !team.units.find(u => u.id === x.ownerId));
     let spawnPoints = state.getSpawnPoints();
     const isSpawnPoint = (pos) => !!spawnPoints.find(x => utils_1.areEqual(x, pos));
     const actions = [];
@@ -22,14 +20,14 @@ const spawnUnits = (units, team, state) => {
         if (!result) {
             continue;
         }
-        const { startPosition, endTarget } = result;
+        const { startPosition } = result;
         actions.push({
             type: 'UNIT',
             action: 'SPAWN',
             unitId: unit.id,
-            target: endTarget
+            target: startPosition
         });
-        spawnPoints = spawnPoints.filter((position) => !utils_1.areEqual(position, endTarget));
+        spawnPoints = spawnPoints.filter((position) => !utils_1.areEqual(position, startPosition));
     }
     return actions;
 };

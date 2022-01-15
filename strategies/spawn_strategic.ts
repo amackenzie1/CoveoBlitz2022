@@ -8,28 +8,25 @@ const spawnUnits: Strategy = (units, team, state) => {
   const unitsToSpawn = units.filter(x => !x.hasSpawned)
   if (!unitsToSpawn.length) { return [] }
 
-  let diamonds = state.map.diamonds
-    .filter(x => !x.ownerId || !team.units.find(u => u.id === x.ownerId))
-
   let spawnPoints = state.getSpawnPoints()
   const isSpawnPoint = (pos: Position) => !!spawnPoints.find(x => areEqual(x, pos))
 
   const actions: Action[] = []
   const target = chooseTarget('unspawned', team, state)
-  if (!target){ return [] }
+  if (!target) { return [] }
   for (let unit of unitsToSpawn) {
-    const result = dijkstra(spawnPoints, (x) => (areEqual(x, target)), {state})
+    const result = dijkstra(spawnPoints, (x) => (areEqual(x, target)), { state })
     if (!result) { continue }
 
-    const { startPosition, endTarget } = result
+    const { startPosition } = result
     actions.push({
       type: 'UNIT',
       action: 'SPAWN',
       unitId: unit.id,
-      target: endTarget
+      target: startPosition
     })
 
-    spawnPoints = spawnPoints.filter((position ) => !areEqual(position, endTarget))
+    spawnPoints = spawnPoints.filter((position) => !areEqual(position, startPosition))
   }
 
   return actions

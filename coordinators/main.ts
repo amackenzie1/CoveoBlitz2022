@@ -12,8 +12,8 @@ import killAnything from "../strategies/kill_whatever_you_can";
 
 const getStrategies: GetStrategies = (state) => {
     return [
-        state.tick <= 5 && [spawnUnits, 'SPAWN-UNITS'],
         state.tick > 5 && [spawnStrategic, 'SPAWN-STRATEGIC'],
+        [spawnUnits, 'SPAWN-CLOSEST'],
         [killClose, 'KILL-CLOSE'],
         state.tick <= 30 && [grabDiamonds, 'GRAB-DIAMONDS'],
         [summonStrategy, 'SUMMON-SIMPLE'],

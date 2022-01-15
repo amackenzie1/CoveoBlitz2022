@@ -14,8 +14,8 @@ const bear_pack_1 = __importDefault(require("../strategies/bear_pack"));
 const kill_whatever_you_can_1 = __importDefault(require("../strategies/kill_whatever_you_can"));
 const getStrategies = (state) => {
     return [
-        state.tick <= 5 && [spawn_closest_1.default, 'SPAWN-UNITS'],
         state.tick > 5 && [spawn_strategic_1.default, 'SPAWN-STRATEGIC'],
+        [spawn_closest_1.default, 'SPAWN-CLOSEST'],
         [kill_close_1.default, 'KILL-CLOSE'],
         state.tick <= 30 && [grab_diamonds_1.default, 'GRAB-DIAMONDS'],
         [simple_summon_1.default, 'SUMMON-SIMPLE'],
