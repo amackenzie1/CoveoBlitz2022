@@ -56,7 +56,7 @@ const moveAwayFromSpawn = (units, team, state) => {
         .map(u => u.position);
     let actions = [];
     for (let unit of units) {
-        const result = search_1.dijkstra(enemyPositions, state.map.tiles, x => utils_1.areEqual(x, unit.position), { max: 5 });
+        const result = search_1.dijkstra(enemyPositions, x => utils_1.areEqual(x, unit.position), { state, max: 5 });
         if (!result) {
             actions.push(utils_1.noop(unit));
             continue;
@@ -64,7 +64,7 @@ const moveAwayFromSpawn = (units, team, state) => {
         const enemyPos = result.startPosition;
         const neighbors = utils_1.allNeighbors(unit.position)
             .filter(x => state.getTileTypeAt(x) === 'EMPTY')
-            .sort((a, b) => search_1.computeDistance(a, enemyPos, state.map.tiles) - search_1.computeDistance(b, enemyPos, state.map.tiles));
+            .sort((a, b) => search_1.computeDistance(a, enemyPos, { state }) - search_1.computeDistance(b, enemyPos, { state }));
         if (neighbors.length) {
             actions.push({
                 type: 'UNIT',

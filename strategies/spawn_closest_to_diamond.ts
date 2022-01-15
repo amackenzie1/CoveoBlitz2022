@@ -5,16 +5,17 @@ import { areEqual, stringify } from '../utils'
 
 const spawnUnits: Strategy = (units, team, state) => {
   const unitsToSpawn = units.filter(x => !x.hasSpawned)
-  console.log(`${unitsToSpawn.length} units to spawn`)
   if (!unitsToSpawn.length) { return [] }
 
-  let diamonds = [...state.map.diamonds]
+  let diamonds = state.map.diamonds
+    .filter(x => !x.ownerId || !team.units.find(u => u.id === x.ownerId))
+
   const spawnPoints = state.getSpawnPoints()
   const isSpawnPoint = (pos: Position) => !!spawnPoints.find(x => areEqual(x, pos))
 
   const actions: Action[] = []
   for (let unit of unitsToSpawn) {
-    const result = dijkstra(diamonds.map(x => x.position), state.map.tiles, isSpawnPoint, { backwards: true })
+    const result = dijkstra(diamonds.map(x => x.position), isSpawnPoint, { state: state, backwards: true })
     if (!result) { continue }
 
     const { startPosition, endTarget } = result

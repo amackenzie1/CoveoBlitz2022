@@ -8,6 +8,12 @@ const grab_diamonds_1 = __importDefault(require("../strategies/grab_diamonds"));
 const hold_simple_1 = __importDefault(require("../strategies/hold_simple"));
 const simple_summon_1 = __importDefault(require("../strategies/simple_summon"));
 const wolf_pack_1 = __importDefault(require("../strategies/wolf_pack"));
-const getStrategies = () => [spawn_closest_to_diamond_1.default, grab_diamonds_1.default, simple_summon_1.default, hold_simple_1.default, wolf_pack_1.default];
+const getStrategies = () => [
+    [spawn_closest_to_diamond_1.default, 'SPAWN-UNITS'],
+    [grab_diamonds_1.default, 'GRAB-DIAMONDS'],
+    [simple_summon_1.default, 'SUMMON-SIMPLE'],
+    [hold_simple_1.default, 'HOLD-SIMPLE'],
+    [wolf_pack_1.default, 'WOLF-PACK']
+];
 exports.default = getStrategies;
 //# sourceMappingURL=main.js.map

@@ -29,6 +29,12 @@ webSocket.onmessage = (message) => {
     let myTeam = gameMessage.getPlayerMapById().get(gameMessage.teamId);
     myTeam?.errors.forEach((error) => console.error(`Bot command Error: ${error}`));
     const actions = bot.getNextMove(gameMessage);
+    if (gameMessage.tick === gameMessage.totalTick - 1) {
+        console.log('-----[ GAME LOGS ]------');
+        bot.getLogs().forEach((logs, idx) => {
+            logs.forEach((log) => console.log(`[${idx}] ${log}`));
+        });
+    }
     webSocket.send(JSON.stringify({
         type: "COMMAND",
         tick: gameMessage.tick,

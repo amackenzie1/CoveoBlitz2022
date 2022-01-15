@@ -9,7 +9,7 @@ import { StrategyCoordinator } from "./strategy-coordinator";
 const webSocket = new WebSocket("ws://0.0.0.0:8765");
 let bot: Bot;
 
-let times : number [] = []
+let times: number[] = []
 
 webSocket.onopen = (event: WebSocket.OpenEvent) => {
   bot = new Bot(new StrategyCoordinator(mainCoordinator));
@@ -33,9 +33,16 @@ webSocket.onmessage = (message: WebSocket.MessageEvent) => {
   let myTeam = gameMessage.getPlayerMapById().get(gameMessage.teamId);
   myTeam?.errors.forEach((error) =>
     console.error(`Bot command Error: ${error}`)
-  );  
+  );
 
   const actions = bot.getNextMove(gameMessage)
+
+  if (gameMessage.tick === gameMessage.totalTick - 1) {
+    console.log('-----[ GAME LOGS ]------')
+    bot.getLogs().forEach((logs, idx) => {
+      logs.forEach((log) => console.log(`[${idx}] ${log}`))
+    })
+  }
 
   webSocket.send(
     JSON.stringify({

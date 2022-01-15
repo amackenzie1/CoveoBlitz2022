@@ -1,12 +1,13 @@
 import { Unit, Action, GameMessage, Team } from './GameInterface'
-import { l1Distance } from './utils'
+import { l1Distance, stringify } from './utils'
 
 type Strategy = (units: Unit[], crew: Team, state: GameMessage) => Action[]
-type GetStrategies = (state: GameMessage) => Strategy[]
+type GetStrategies = (state: GameMessage) => [Strategy, string][]
 
 class StrategyCoordinator {
+  public logs: string[][] = []
   constructor(
-    private getStrategies: GetStrategies
+    private getStrategies: GetStrategies,
   ) { }
 
   tick(state: GameMessage): Action[] {
@@ -19,16 +20,26 @@ class StrategyCoordinator {
     let units = [...team.units]
     const strategies = this.getStrategies(state)
 
+    const logs: string[] = []
     const allActions: Action[][] = []
-    for (let strategy of strategies) {
+    for (let [strategy, name] of strategies) {
       const actions = strategy(units, team, state)
       const isOk = validateNoCoveoPathfinding(actions, units)
-      if (!isOk) { return [] }
+      if (!isOk) {
+        logs.push(`Strategy ${name} tried to use COVEO pathfinding`)
+        return []
+      }
+
+      const claimedUnits = units.filter(x => actions.find(a => a.unitId === x.id))
+      logs.push(`Strategy ${name} claimed: [${claimedUnits.map(x => `${x.id} (${x.position ? stringify(x.position) : 'unspawned'})`).join('; ')}]`)
 
       units = units.filter(x => !actions.find(a => a.unitId === x.id))
       allActions.push(actions)
     }
 
+    logs.push(`Unclaimed units: ${units.map(x => `${x.id} (${x.position ? stringify(x.position) : 'unspawned'})`).join('; ')}}`)
+
+    this.logs.push(logs)
     return allActions.flat()
   }
 }

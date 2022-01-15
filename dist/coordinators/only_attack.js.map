@@ -1,1 +1,1 @@
-{"version":3,"file":"only_attack.js","sourceRoot":"","sources":["../../coordinators/only_attack.ts"],"names":[],"mappings":";;;;;AACA,4EAAmD;AACnD,wEAAiD;AAEjD,MAAM,aAAa,GAAkB,GAAG,EAAE,CAAC,CAAC,qBAAU,EAAE,mBAAU,CAAC,CAAA;AACnE,kBAAe,aAAa,CAAA"}
+{"version":3,"file":"only_attack.js","sourceRoot":"","sources":["../../coordinators/only_attack.ts"],"names":[],"mappings":";;;;;AACA,4EAAmD;AACnD,wEAAiD;AAEjD,MAAM,aAAa,GAAkB,GAAG,EAAE,CAAC;IACvC,CAAC,qBAAU,EAAE,aAAa,CAAC;IAC3B,CAAC,mBAAU,EAAE,aAAa,CAAC;CAC9B,CAAA;AACD,kBAAe,aAAa,CAAA"}

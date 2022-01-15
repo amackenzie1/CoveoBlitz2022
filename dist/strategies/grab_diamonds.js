@@ -2,13 +2,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const utils_1 = require("../utils");
 const search_1 = require("../search");
-function getAllUnits(state) {
-    let allUnits = [];
-    for (let team of state.teams) {
-        allUnits = [...allUnits, ...team.units];
-    }
-    return allUnits;
-}
 const grabDiamonds = (units, team, state) => {
     units = units.filter(x => x.hasSpawned && !x.hasDiamond);
     let takenDiamondStrings = state.teams
@@ -19,7 +12,8 @@ const grabDiamonds = (units, team, state) => {
     const actions = [];
     const hasDiamond = (pos) => !!diamonds.find(d => utils_1.areEqual(pos, d.position));
     for (let unit of units) {
-        let returned = search_1.dijkstra([unit.position], state.map.tiles, hasDiamond);
+        let returned = search_1.dijkstra([unit.position], hasDiamond, { state });
+        console.log(`Couldn't find path from ${utils_1.stringify(unit.position)} to diamonds ${JSON.stringify(diamonds.map(x => x.position))}`);
         if (!returned) {
             continue;
         }

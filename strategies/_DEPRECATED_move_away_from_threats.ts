@@ -61,13 +61,13 @@ const moveAwayFromSpawn: Strategy = (units, team, state) => {
 
   let actions: Action[] = []
   for (let unit of units) {
-    const result = dijkstra(enemyPositions, state.map.tiles, x => areEqual(x, unit.position), { max: 5 })
+    const result = dijkstra(enemyPositions,x => areEqual(x, unit.position), { state, max: 5 })
     if (!result) { actions.push(noop(unit)); continue }
 
     const enemyPos = result.startPosition
     const neighbors = allNeighbors(unit.position)
       .filter(x => state.getTileTypeAt(x) === 'EMPTY')
-      .sort((a, b) => computeDistance(a, enemyPos, state.map.tiles)! - computeDistance(b, enemyPos, state.map.tiles)!)
+      .sort((a, b) => computeDistance(a, enemyPos, {state})! - computeDistance(b, enemyPos, {state})!)
 
     if (neighbors.length) {
       actions.push({

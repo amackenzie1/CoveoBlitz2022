@@ -1,13 +1,19 @@
 import { Strategy } from '../strategy-coordinator'
 import { Action, GameMessage, TileType, Diamond, Position, Unit } from '../GameInterface'
-import { randomNeighbor, areEqual, stringify, l1Distance, allNeighbors, noop } from '../utils'
+import { randomNeighbor, areEqual, stringify, l1Distance, allNeighbors, noop, freeNeighbors } from '../utils'
 import { computeDistance, dijkstra } from "../search"
 
 const getDropPosition = (unit: Unit, state: GameMessage, enemyPositions: Position[]): Position | null => {
   const validPositions = allNeighbors(unit.position)
     .filter(pos => state.getTileTypeAt(pos) === 'EMPTY')
-  const preferedPosition = validPositions
-    .filter(pos => !enemyPositions.find(pos2 => l1Distance(pos, pos2) >= 3))[0]
+
+  let desired = 3
+  let preferedPosition
+  do {
+    preferedPosition = validPositions
+      .filter(pos => !enemyPositions.find(pos2 => l1Distance(pos, pos2) >= desired))[0]
+    desired--
+  } while (preferedPosition === undefined && desired > 0)
 
   const target = preferedPosition || validPositions[0]
   return target || null
@@ -23,7 +29,6 @@ const holdSimple: Strategy = (units, team, state) => {
     .filter(u => u.hasSpawned && !u.hasDiamond)
     .map(u => u.position)
 
-  console.log('TICKK', state.tick, state.totalTick)
   if (state.tick >= state.totalTick - 4) {
     return units.map<Action>(unit => {
       const target = getDropPosition(unit, state, enemyUnits)
@@ -37,18 +42,17 @@ const holdSimple: Strategy = (units, team, state) => {
   }
 
   return units.map<Action>(unit => {
-    const result = dijkstra(enemyUnits, state.map.tiles, x => areEqual(x, unit.position), { max: 7 })
+    const result = dijkstra(enemyUnits, x => areEqual(x, unit.position), { state: state, max: 7 })
     if (!result) {
       console.log(`Nooping ${unit.id} (${stringify(unit.position)})`)
       return noop(unit)
     }
 
     const enemyPos = result.startPosition
-    const neighbors = allNeighbors(unit.position)
-      .filter(x => state.getTileTypeAt(x) === 'EMPTY')
+    const neighbors = freeNeighbors(unit.position, state)
 
       // sort backwards
-      .sort((a, b) =>  computeDistance(b, enemyPos, state.map.tiles)! - computeDistance(a, enemyPos, state.map.tiles)!)
+      .sort((a, b) => computeDistance(b, enemyPos, { state })! - computeDistance(a, enemyPos, { state })!)
 
     console.log(`Need to run ${stringify(unit.position)} from ${stringify(enemyPos)}: [${neighbors.join(', ')}]`)
     if (neighbors.length) {
@@ -69,7 +73,7 @@ const holdSimple: Strategy = (units, team, state) => {
       }
     }
 
-    const escapeMove = allNeighbors(unit.position).find(x => state.getTileTypeAt(x) === 'EMPTY')
+    const escapeMove = freeNeighbors(unit.position, state)[0]
     if (escapeMove) {
       return {
         type: 'UNIT',

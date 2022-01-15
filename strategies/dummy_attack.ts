@@ -13,7 +13,7 @@ const attackDumb: Strategy = (units, team, state) => {
   return units.map<Action>(unit => {
     const mapped = enemyUnitPositions
       .map<[Position, number, Position] | null>(pos => {
-        const result = a_star(unit.position, pos, state.map.tiles)
+        const result = a_star(unit.position, pos, { state })
         if (!result) { return null }
         return [result.nextTarget, result.distance, pos]
       })
@@ -24,7 +24,7 @@ const attackDumb: Strategy = (units, team, state) => {
     if (!mapped.length) {
       enemyUnitPositions
         .forEach(pos => {
-          const result = a_star(unit.position, pos, state.map.tiles)
+          const result = a_star(unit.position, pos, { state })
           if (!result) {
             console.log(`\n\n\nNO PATH FROM ${stringify(unit.position)} TO ${stringify(pos)}!\n\n\n`)
           }

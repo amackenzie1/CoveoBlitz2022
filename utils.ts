@@ -1,4 +1,4 @@
-import { Action, Position, Unit } from './GameInterface'
+import { Action, Position, Unit, GameMessage } from './GameInterface'
 
 const add = (a: Position, b: Position): Position => {
   return {
@@ -9,6 +9,14 @@ const add = (a: Position, b: Position): Position => {
 
 const areEqual = (a: Position, b: Position): boolean => {
   return a.x === b.x && a.y === b.y
+}
+
+function getAllUnits(state: GameMessage) {
+  let allUnits: Unit[] = []
+  for (let team of state.teams) {
+    allUnits = [...allUnits, ...team.units]
+  }
+  return allUnits
 }
 
 const NEIGHBORS: Position[] = [
@@ -27,6 +35,16 @@ const allNeighbors = (pos: Position): Position[] => {
   return NEIGHBORS.map(diff => add(pos, diff))
 }
 
+const freeNeighbors = (pos: Position, state: GameMessage) => {
+  let units = state.teams.flatMap(t => t.units).filter(u => u.hasSpawned).map(x => x.position)
+  let diamonds = state.map.diamonds.map(x => x.position)
+  let obstacles = [...units, ...diamonds].map(x => stringify(x))
+
+  return allNeighbors(pos)
+    .filter(x => state.getTileTypeAt(x) === 'EMPTY')
+    .filter(x => !obstacles.includes(stringify(x)))
+}
+
 const stringify = (pos: Position): string => `${pos.x},${pos.y}`
 const l1Distance = (a: Position, b: Position): number => Math.abs(a.x - b.x) + Math.abs(a.y - b.y)
 
@@ -39,4 +57,4 @@ const noop = (unit: Unit): Action => {
   }
 }
 
-export { add, areEqual, NEIGHBORS, randomNeighbor, allNeighbors, stringify, l1Distance, noop }
+export { add, areEqual, NEIGHBORS, randomNeighbor, allNeighbors, freeNeighbors, stringify, l1Distance, noop, getAllUnits }

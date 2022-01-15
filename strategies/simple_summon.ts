@@ -41,7 +41,12 @@ const summonStrategy: Strategy = (units, team, state) => {
 
     let actions: Action[] = [];
     for (let [unit, ticksRequired] of unitsWithTicks) {
-        const returned = dijkstra([unit.position], state.map.tiles, hasEnemy, { max: ticksRequired + 1 });
+        const returned = dijkstra([unit.position], hasEnemy, {
+            state,
+            max: ticksRequired + 1,
+            ignoreUnitObstacles: true,
+            backwards: true
+        });
         if (!returned) {
             actions.push({
                 type: "UNIT",
@@ -52,7 +57,7 @@ const summonStrategy: Strategy = (units, team, state) => {
             continue
         }
 
-        if (returned.distance <= ticksRequired) { continue }
+        if (returned.distance + 1 <= ticksRequired) { continue }
 
         actions.push({
             type: "UNIT",

@@ -1,15 +1,7 @@
 import { Strategy } from '../strategy-coordinator'
 import { Action, TileType, Diamond, Position, Unit, GameMessage } from '../GameInterface'
-import { randomNeighbor, areEqual, stringify } from '../utils'
+import { randomNeighbor, areEqual, stringify, getAllUnits } from '../utils'
 import { dijkstra } from "../search"
-
-function getAllUnits(state: GameMessage) {
-    let allUnits: Unit[] = []
-    for (let team of state.teams) {
-        allUnits = [...allUnits, ...team.units]
-    }
-    return allUnits
-}
 
 
 const grabDiamonds: Strategy = (units, team, state) => {
@@ -25,7 +17,8 @@ const grabDiamonds: Strategy = (units, team, state) => {
     const hasDiamond = (pos: Position): boolean => !!diamonds.find(d => areEqual(pos, d.position))
 
     for (let unit of units) {
-        let returned = dijkstra([unit.position], state.map.tiles, hasDiamond)
+        let returned = dijkstra([unit.position], hasDiamond, { state })
+        console.log(`Couldn't find path from ${stringify(unit.position)} to diamonds ${JSON.stringify(diamonds.map(x => x.position))}`)
         if (!returned) { continue }
         let { nextTarget, endTarget } = returned;
         diamonds = diamonds.filter((diamond) => !areEqual(diamond.position, endTarget));

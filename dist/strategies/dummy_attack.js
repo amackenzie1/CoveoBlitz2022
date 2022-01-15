@@ -11,7 +11,7 @@ const attackDumb = (units, team, state) => {
     return units.map(unit => {
         const mapped = enemyUnitPositions
             .map(pos => {
-            const result = search_1.a_star(unit.position, pos, state.map.tiles);
+            const result = search_1.a_star(unit.position, pos, { state });
             if (!result) {
                 return null;
             }
@@ -22,7 +22,7 @@ const attackDumb = (units, team, state) => {
         if (!mapped.length) {
             enemyUnitPositions
                 .forEach(pos => {
-                const result = search_1.a_star(unit.position, pos, state.map.tiles);
+                const result = search_1.a_star(unit.position, pos, { state });
                 if (!result) {
                     console.log(`\n\n\nNO PATH FROM ${utils_1.stringify(unit.position)} TO ${utils_1.stringify(pos)}!\n\n\n`);
                 }

@@ -6,6 +6,12 @@ import holdSimple from "../strategies/hold_simple";
 import summonStrategy from "../strategies/simple_summon";
 import wolfPack from "../strategies/wolf_pack";
 
-const getStrategies: GetStrategies = () => [spawnUnits, grabDiamonds, summonStrategy, holdSimple, wolfPack]
+const getStrategies: GetStrategies = () => [
+    [spawnUnits, 'SPAWN-UNITS'], 
+    [grabDiamonds, 'GRAB-DIAMONDS'], 
+    [summonStrategy, 'SUMMON-SIMPLE'], 
+    [holdSimple, 'HOLD-SIMPLE'], 
+    [wolfPack, 'WOLF-PACK']
+]
 
 export default getStrategies

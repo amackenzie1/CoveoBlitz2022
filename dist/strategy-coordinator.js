@@ -5,6 +5,7 @@ const utils_1 = require("./utils");
 class StrategyCoordinator {
     constructor(getStrategies) {
         this.getStrategies = getStrategies;
+        this.logs = [];
     }
     tick(state) {
         const team = state.teams.find(x => x.id === state.teamId);
@@ -14,16 +15,22 @@ class StrategyCoordinator {
         }
         let units = [...team.units];
         const strategies = this.getStrategies(state);
+        const logs = [];
         const allActions = [];
-        for (let strategy of strategies) {
+        for (let [strategy, name] of strategies) {
             const actions = strategy(units, team, state);
             const isOk = validateNoCoveoPathfinding(actions, units);
             if (!isOk) {
+                logs.push(`Strategy ${name} tried to use COVEO pathfinding`);
                 return [];
             }
+            const claimedUnits = units.filter(x => actions.find(a => a.unitId === x.id));
+            logs.push(`Strategy ${name} claimed: [${claimedUnits.map(x => `${x.id} (${x.position ? utils_1.stringify(x.position) : 'unspawned'})`).join('; ')}]`);
             units = units.filter(x => !actions.find(a => a.unitId === x.id));
             allActions.push(actions);
         }
+        logs.push(`Unclaimed units: ${units.map(x => `${x.id} (${x.position ? utils_1.stringify(x.position) : 'unspawned'})`).join('; ')}}`);
+        this.logs.push(logs);
         return allActions.flat();
     }
 }
