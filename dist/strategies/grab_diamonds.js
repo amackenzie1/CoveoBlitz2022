@@ -14,11 +14,24 @@ const grabDiamonds = (units, team, state) => {
     for (let unit of units) {
         let returned = search_1.dijkstra([unit.position], hasDiamond, { state });
         console.log(`Couldn't find path from ${utils_1.stringify(unit.position)} to diamonds ${JSON.stringify(diamonds.map(x => x.position))}`);
-        if (!returned) {
+        if (!returned || !returned.endTarget) {
             continue;
         }
-        let { nextTarget, endTarget } = returned;
+        let { nextTarget, endTarget, distance } = returned;
         diamonds = diamonds.filter((diamond) => !utils_1.areEqual(diamond.position, endTarget));
+        if (distance === 1) {
+            // Check if we're about to get killed in the bloodbath
+            const badTeams = utils_1.getTeamsWithHigherPriorityNextRound(team.id, state);
+            const badUnits = state.teams
+                .filter(t => badTeams.includes(t.id))
+                .flatMap(t => t.units)
+                .filter(u => u.hasSpawned && !u.hasDiamond)
+                .filter(u => utils_1.l1Distance(u.position, endTarget) == 2);
+            if (badUnits.length) {
+                actions.push(utils_1.noop(unit));
+                continue;
+            }
+        }
         actions.push({
             type: "UNIT",
             action: "MOVE",

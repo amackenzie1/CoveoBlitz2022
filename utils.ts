@@ -1,4 +1,4 @@
-import { Action, Position, Unit, GameMessage } from './GameInterface'
+import { Action, Position, Team, Unit, GameMessage } from './GameInterface'
 
 const add = (a: Position, b: Position): Position => {
   return {
@@ -45,6 +45,27 @@ const freeNeighbors = (pos: Position, state: GameMessage) => {
     .filter(x => !obstacles.includes(stringify(x)))
 }
 
+const hasClearLOS = (a: Position, b: Position, state: GameMessage): boolean => {
+  if (a.x !== b.x && a.y !== b.y) { return false }
+
+  const diff: Position = {
+    x: Math.sign(b.x - a.x),
+    y: Math.sign(b.y - a.y),
+  }
+
+  let pos = a
+  while (true) {
+    const type = state.getTileTypeAt(pos)
+    if (!type) { return false } // shouldn't happen
+    if (type !== 'EMPTY') { return false }
+
+    if (areEqual(pos, b)) { return true }
+    pos = add(pos, diff)
+  }
+
+  return false // shouldn't happen
+}
+
 const stringify = (pos: Position): string => `${pos.x},${pos.y}`
 const l1Distance = (a: Position, b: Position): number => Math.abs(a.x - b.x) + Math.abs(a.y - b.y)
 
@@ -57,4 +78,29 @@ const noop = (unit: Unit): Action => {
   }
 }
 
-export { add, areEqual, NEIGHBORS, randomNeighbor, allNeighbors, freeNeighbors, stringify, l1Distance, noop, getAllUnits }
+function getTeamsWithHigherPriorityNextRound(myTeamId: string, state: GameMessage) {
+  let teamPlayOrder = state.teamPlayOrderings[state.tick + 1]
+  if (!teamPlayOrder) { return [] }
+
+  let higherPriority = []
+  for (let teamId of teamPlayOrder) {
+    if (teamId === myTeamId) { break }
+    higherPriority.push(teamId)
+  }
+  return higherPriority
+}
+
+function getTeamsWithLowerPriorityThisRound(myTeamId: string, state: GameMessage) {
+  let teamPlayOrder = state.teamPlayOrderings[state.tick]
+  if (!teamPlayOrder) { return [] }
+
+  teamPlayOrder.reverse()
+  let lowerPriority = []
+  for (let teamId of teamPlayOrder) {
+    if (teamId === myTeamId) { break }
+    lowerPriority.push(teamId)
+  }
+  return lowerPriority
+}
+
+export { hasClearLOS, add, areEqual, NEIGHBORS, randomNeighbor, allNeighbors, freeNeighbors, stringify, l1Distance, noop, getAllUnits, getTeamsWithHigherPriorityNextRound, getTeamsWithLowerPriorityThisRound }

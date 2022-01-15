@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getAllUnits = exports.noop = exports.l1Distance = exports.stringify = exports.freeNeighbors = exports.allNeighbors = exports.randomNeighbor = exports.NEIGHBORS = exports.areEqual = exports.add = void 0;
+exports.getTeamsWithLowerPriorityThisRound = exports.getTeamsWithHigherPriorityNextRound = exports.getAllUnits = exports.noop = exports.l1Distance = exports.stringify = exports.freeNeighbors = exports.allNeighbors = exports.randomNeighbor = exports.NEIGHBORS = exports.areEqual = exports.add = exports.hasClearLOS = void 0;
 const add = (a, b) => {
     return {
         x: a.x + b.x,
@@ -45,6 +45,31 @@ const freeNeighbors = (pos, state) => {
         .filter(x => !obstacles.includes(stringify(x)));
 };
 exports.freeNeighbors = freeNeighbors;
+const hasClearLOS = (a, b, state) => {
+    if (a.x !== b.x && a.y !== b.y) {
+        return false;
+    }
+    const diff = {
+        x: Math.sign(b.x - a.x),
+        y: Math.sign(b.y - a.y),
+    };
+    let pos = a;
+    while (true) {
+        const type = state.getTileTypeAt(pos);
+        if (!type) {
+            return false;
+        } // shouldn't happen
+        if (type !== 'EMPTY') {
+            return false;
+        }
+        if (areEqual(pos, b)) {
+            return true;
+        }
+        pos = add(pos, diff);
+    }
+    return false; // shouldn't happen
+};
+exports.hasClearLOS = hasClearLOS;
 const stringify = (pos) => `${pos.x},${pos.y}`;
 exports.stringify = stringify;
 const l1Distance = (a, b) => Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
@@ -58,4 +83,35 @@ const noop = (unit) => {
     };
 };
 exports.noop = noop;
+function getTeamsWithHigherPriorityNextRound(myTeamId, state) {
+    let teamPlayOrder = state.teamPlayOrderings[state.tick + 1];
+    if (!teamPlayOrder) {
+        return [];
+    }
+    let higherPriority = [];
+    for (let teamId of teamPlayOrder) {
+        if (teamId === myTeamId) {
+            break;
+        }
+        higherPriority.push(teamId);
+    }
+    return higherPriority;
+}
+exports.getTeamsWithHigherPriorityNextRound = getTeamsWithHigherPriorityNextRound;
+function getTeamsWithLowerPriorityThisRound(myTeamId, state) {
+    let teamPlayOrder = state.teamPlayOrderings[state.tick];
+    if (!teamPlayOrder) {
+        return [];
+    }
+    teamPlayOrder.reverse();
+    let lowerPriority = [];
+    for (let teamId of teamPlayOrder) {
+        if (teamId === myTeamId) {
+            break;
+        }
+        lowerPriority.push(teamId);
+    }
+    return lowerPriority;
+}
+exports.getTeamsWithLowerPriorityThisRound = getTeamsWithLowerPriorityThisRound;
 //# sourceMappingURL=utils.js.map
