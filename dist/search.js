@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.a_star = exports.dijkstra = void 0;
+exports.computeDistance = exports.a_star = exports.dijkstra = void 0;
 const ts_priority_queue_1 = __importDefault(require("ts-priority-queue"));
 const utils_1 = require("./utils");
 function getNeighbors(pos, tiles) {
@@ -12,7 +12,8 @@ function getNeighbors(pos, tiles) {
     return utils_1.allNeighbors(pos).filter(({ x, y }) => x >= 0 && x < width &&
         y >= 0 && y < height);
 }
-function inner_dijkstra(starts, tiles, isTarget, backwards = false, max = Infinity) {
+function inner_dijkstra(starts, tiles, isTarget, options = {}) {
+    const { backwards = false, max = Infinity, units = [] } = options;
     const queue = new ts_priority_queue_1.default({ comparator: (a, b) => a.g - b.g });
     starts.forEach(start => queue.queue({ pos: start, g: 0, f: 0 }));
     const visited = new Set();
@@ -44,13 +45,16 @@ function inner_dijkstra(starts, tiles, isTarget, backwards = false, max = Infini
             if (backwards && currentType === 'SPAWN' && neighborType === 'EMPTY') {
                 continue;
             }
+            if (units.some(unit => utils_1.areEqual(neighbor, unit.position))) {
+                continue;
+            }
             queue.queue({ pos: neighbor, g: current.g + 1, f: 0, parent: current });
         }
     }
     return null;
 }
-function dijkstra(starts, tiles, isTarget, backwards = false, max = Infinity) {
-    let destination = inner_dijkstra(starts, tiles, isTarget, backwards, max);
+function dijkstra(starts, tiles, isTarget, options = {}) {
+    let destination = inner_dijkstra(starts, tiles, isTarget, options);
     if (!destination) {
         return null;
     }
@@ -72,19 +76,14 @@ exports.dijkstra = dijkstra;
 function heuristic(a, b) {
     return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
 }
-function inner_a_star(start, end, tiles, max = Infinity) {
+function inner_a_star(start, end, tiles, options = {}) {
+    const { backwards = false, max = Infinity, units = [] } = options;
     const queue = new ts_priority_queue_1.default({ comparator: (a, b) => a.f - b.f });
     queue.queue({ pos: start, g: 0, f: Infinity });
     const visited = new Set();
-    if (max === 69) {
-        //console.log(`-------------[ Start ${stringify(start)}, End: ${stringify(end)}, Queue Length: ${queue.length} ]-----------`)
-    }
     while (queue.length) {
         const current = queue.dequeue();
         const currentType = tiles[current.pos.x][current.pos.y];
-        if (max === 69) {
-            //console.log(`Current: ${stringify(current.pos)}, ${areEqual(start, end)}, ${visited.has(stringify(current.pos))}, ${current.g > max}`)
-        }
         if (utils_1.areEqual(current.pos, end)) {
             return current;
         }
@@ -96,15 +95,21 @@ function inner_a_star(start, end, tiles, max = Infinity) {
         }
         visited.add(utils_1.stringify(current.pos));
         const neighbors = getNeighbors(current.pos, tiles);
-        if (max === 69) {
-            //console.log(`Expanding ${stringify(current.pos)}`)
-        }
         for (let neighbor of neighbors) {
             if (visited.has(utils_1.stringify(neighbor))) {
                 continue;
             }
             const neighborType = tiles[neighbor.x][neighbor.y];
-            if (neighborType === "WALL" || (currentType === 'EMPTY' && neighborType === 'SPAWN')) {
+            if (neighborType === "WALL") {
+                continue;
+            }
+            if (!backwards && currentType === 'EMPTY' && neighborType === 'SPAWN') {
+                continue;
+            }
+            if (backwards && currentType === 'SPAWN' && neighborType === 'EMPTY') {
+                continue;
+            }
+            if (units.some(unit => utils_1.areEqual(neighbor, unit.position))) {
                 continue;
             }
             const g = current.g + 1;
@@ -114,8 +119,8 @@ function inner_a_star(start, end, tiles, max = Infinity) {
     }
     return null;
 }
-function a_star(start, end, tiles, max = Infinity) {
-    let destination = inner_a_star(start, end, tiles, max);
+function a_star(start, end, tiles, options = {}) {
+    let destination = inner_a_star(start, end, tiles, options);
     if (!destination) {
         return null;
     }
@@ -134,4 +139,9 @@ function a_star(start, end, tiles, max = Infinity) {
     };
 }
 exports.a_star = a_star;
+function computeDistance(a, b, tiles, options = {}) {
+    const result = a_star(a, b, tiles, options);
+    return result ? result.distance : null;
+}
+exports.computeDistance = computeDistance;
 //# sourceMappingURL=search.js.map

@@ -17,7 +17,7 @@ function ticksForSummon(summonLevel: number): number | null {
     return null
 }
 
-function getDiamonds(units: Unit[], diamonds: Diamond[]): [Unit, number][] {
+function ticksToLevelUp(units: Unit[], diamonds: Diamond[]): [Unit, number][] {
     const ticksMap: Record<string, number | null> = {}
     for (let diamond of diamonds) {
         ticksMap[diamond.id] = ticksForSummon(diamond.summonLevel)
@@ -35,13 +35,13 @@ function getDiamonds(units: Unit[], diamonds: Diamond[]): [Unit, number][] {
 
 const summonStrategy: Strategy = (units, team, state) => {
     units = units.filter(x => x.hasSpawned && x.hasDiamond)
-    const unitsWithTicks = getDiamonds(units, state.map.diamonds)
+    const unitsWithTicks = ticksToLevelUp(units, state.map.diamonds)
     const enemyPositions = getEnemies(team, state).map(x => stringify(x.position));
     const hasEnemy = (position: Position) => enemyPositions.includes(stringify(position));
 
     let actions: Action[] = [];
     for (let [unit, ticksRequired] of unitsWithTicks) {
-        const returned = dijkstra([unit.position], state.map.tiles, hasEnemy, false, ticksRequired+1);
+        const returned = dijkstra([unit.position], state.map.tiles, hasEnemy, { max: ticksRequired + 1 });
         if (!returned) {
             actions.push({
                 type: "UNIT",
@@ -53,7 +53,7 @@ const summonStrategy: Strategy = (units, team, state) => {
         }
 
         if (returned.distance <= ticksRequired) { continue }
-        
+
         actions.push({
             type: "UNIT",
             action: "SUMMON",

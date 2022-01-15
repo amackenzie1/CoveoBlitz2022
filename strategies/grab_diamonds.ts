@@ -4,8 +4,8 @@ import { randomNeighbor, areEqual, stringify } from '../utils'
 import { dijkstra } from "../search"
 
 function getAllUnits(state: GameMessage) {
-    let allUnits : Unit [] = []
-    for (let team of state.teams){
+    let allUnits: Unit[] = []
+    for (let team of state.teams) {
         allUnits = [...allUnits, ...team.units]
     }
     return allUnits
@@ -13,18 +13,16 @@ function getAllUnits(state: GameMessage) {
 
 
 const grabDiamonds: Strategy = (units, team, state) => {
-    let takenDiamondStrings : String [] = getAllUnits(state).filter(x => x.hasDiamond).map(x => stringify(x.position))
     units = units.filter(x => x.hasSpawned && !x.hasDiamond)
-  
-    let diamonds = state.map.diamonds;
-    diamonds = diamonds.filter(x => !takenDiamondStrings.includes(stringify(x.position)));
+    let takenDiamondStrings: String[] = state.teams
+        .flatMap(t => t.units)
+        .filter(x => x.hasSpawned && x.hasDiamond)
+        .map(x => stringify(x.position))
 
-    let actions: Action[] = [];
+    let diamonds = state.map.diamonds.filter(x => !takenDiamondStrings.includes(stringify(x.position)));
 
-    function hasDiamond(pos: Position): boolean {
-        const diamondPositions: string[] = diamonds.map((diamond) => stringify(diamond.position))
-        return diamondPositions.includes(stringify(pos))
-    }
+    const actions: Action[] = [];
+    const hasDiamond = (pos: Position): boolean => !!diamonds.find(d => areEqual(pos, d.position))
 
     for (let unit of units) {
         let returned = dijkstra([unit.position], state.map.tiles, hasDiamond)
@@ -39,6 +37,6 @@ const grabDiamonds: Strategy = (units, team, state) => {
         })
     }
     return actions;
-    }
+}
 
 export default grabDiamonds

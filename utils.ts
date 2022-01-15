@@ -1,4 +1,4 @@
-import { Position } from './GameInterface'
+import { Action, Position, Unit } from './GameInterface'
 
 const add = (a: Position, b: Position): Position => {
   return {
@@ -30,4 +30,13 @@ const allNeighbors = (pos: Position): Position[] => {
 const stringify = (pos: Position): string => `${pos.x},${pos.y}`
 const l1Distance = (a: Position, b: Position): number => Math.abs(a.x - b.x) + Math.abs(a.y - b.y)
 
-export { add, areEqual, NEIGHBORS, randomNeighbor, allNeighbors, stringify, l1Distance }
+const noop = (unit: Unit): Action => {
+  return {
+    type: 'UNIT',
+    action: 'NONE',
+    target: unit.position,
+    unitId: unit.id,
+  }
+}
+
+export { add, areEqual, NEIGHBORS, randomNeighbor, allNeighbors, stringify, l1Distance, noop }

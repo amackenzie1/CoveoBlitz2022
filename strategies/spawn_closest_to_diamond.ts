@@ -14,7 +14,7 @@ const spawnUnits: Strategy = (units, team, state) => {
 
   const actions: Action[] = []
   for (let unit of unitsToSpawn) {
-    const result = dijkstra(diamonds.map(x => x.position), state.map.tiles, isSpawnPoint, true)
+    const result = dijkstra(diamonds.map(x => x.position), state.map.tiles, isSpawnPoint, { backwards: true })
     if (!result) { continue }
 
     const { startPosition, endTarget } = result

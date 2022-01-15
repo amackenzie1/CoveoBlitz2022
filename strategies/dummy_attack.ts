@@ -1,16 +1,7 @@
 import { Unit, Action, Position } from '../GameInterface'
 import { Strategy } from '../strategy-coordinator'
 import { a_star } from '../search'
-import { stringify, areEqual } from '../utils'
-
-const noop = (unit: Unit): Action => {
-  return {
-    type: 'UNIT',
-    action: 'NONE',
-    target: unit.position,
-    unitId: unit.id,
-  }
-}
+import { stringify, areEqual, noop } from '../utils'
 
 const attackDumb: Strategy = (units, team, state) => {
   let enemyUnitPositions = state.teams
@@ -22,7 +13,7 @@ const attackDumb: Strategy = (units, team, state) => {
   return units.map<Action>(unit => {
     const mapped = enemyUnitPositions
       .map<[Position, number, Position] | null>(pos => {
-        const result = a_star(unit.position, pos, state.map.tiles, 69)
+        const result = a_star(unit.position, pos, state.map.tiles)
         if (!result) { return null }
         return [result.nextTarget, result.distance, pos]
       })

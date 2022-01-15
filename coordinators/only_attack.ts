@@ -1,9 +1,6 @@
-import { StrategyCoordinator, GetStrategies, Strategy } from "../strategy-coordinator";
-import { Action, Unit, Position } from '../GameInterface'
+import { GetStrategies } from "../strategy-coordinator";
 import spawnUnits from "../strategies/dummy_spawn";
-import attackDumb from "../strategies/dummy_attack";
-import { a_star, dijkstra } from '../search'
-import { areEqual, stringify } from '../utils'
+import attackWolf from "../strategies/wolf_pack";
 
-const getStrategies: GetStrategies = () => [spawnUnits, attackDumb]
+const getStrategies: GetStrategies = () => [spawnUnits, attackWolf]
 export default getStrategies

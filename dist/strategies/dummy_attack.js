@@ -2,14 +2,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const search_1 = require("../search");
 const utils_1 = require("../utils");
-const noop = (unit) => {
-    return {
-        type: 'UNIT',
-        action: 'NONE',
-        target: unit.position,
-        unitId: unit.id,
-    };
-};
 const attackDumb = (units, team, state) => {
     let enemyUnitPositions = state.teams
         .filter(t => t.id !== team.id)
@@ -19,7 +11,7 @@ const attackDumb = (units, team, state) => {
     return units.map(unit => {
         const mapped = enemyUnitPositions
             .map(pos => {
-            const result = search_1.a_star(unit.position, pos, state.map.tiles, 69);
+            const result = search_1.a_star(unit.position, pos, state.map.tiles);
             if (!result) {
                 return null;
             }
@@ -35,7 +27,7 @@ const attackDumb = (units, team, state) => {
                     console.log(`\n\n\nNO PATH FROM ${utils_1.stringify(unit.position)} TO ${utils_1.stringify(pos)}!\n\n\n`);
                 }
             });
-            return noop(unit);
+            return utils_1.noop(unit);
         }
         const [nextTarget, distance, enemyPosition] = mapped[0];
         enemyUnitPositions = enemyUnitPositions.filter(pos => !utils_1.areEqual(pos, enemyPosition));

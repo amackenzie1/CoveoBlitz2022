@@ -1,5 +1,5 @@
 import PriorityQueue from "ts-priority-queue"
-import { Position, TileType } from "./GameInterface";
+import { Position, TileType, Unit } from "./GameInterface";
 import { allNeighbors, areEqual, stringify } from './utils'
 
 type Point = {
@@ -7,6 +7,12 @@ type Point = {
     g: number
     f: number
     parent?: Point
+}
+
+type SearchOptions = {
+    units?: Unit[]
+    max?: number
+    backwards?: boolean
 }
 
 type SearchAlgorithmReturn = {
@@ -27,7 +33,13 @@ function getNeighbors(pos: Position, tiles: TileType[][]) {
     )
 }
 
-function inner_dijkstra(starts: Position[], tiles: TileType[][], isTarget: (pos: Position) => boolean, backwards: boolean = false, max: number = Infinity): Point | null {
+function inner_dijkstra(starts: Position[], tiles: TileType[][], isTarget: (pos: Position) => boolean, options: SearchOptions = {}): Point | null {
+    const {
+        backwards = false,
+        max = Infinity,
+        units = []
+    } = options
+
     const queue = new PriorityQueue<Point>({ comparator: (a, b) => a.g - b.g });
     starts.forEach(start => queue.queue({ pos: start, g: 0, f: 0 }))
 
@@ -55,7 +67,7 @@ function inner_dijkstra(starts: Position[], tiles: TileType[][], isTarget: (pos:
             if (neighborType === "WALL") { continue }
             if (!backwards && currentType === 'EMPTY' && neighborType === 'SPAWN') { continue }
             if (backwards && currentType === 'SPAWN' && neighborType === 'EMPTY') { continue }
-
+            if (units.some(unit => areEqual(neighbor, unit.position))) { continue }
 
             queue.queue({ pos: neighbor, g: current.g + 1, f: 0, parent: current });
         }
@@ -63,8 +75,8 @@ function inner_dijkstra(starts: Position[], tiles: TileType[][], isTarget: (pos:
     return null;
 }
 
-function dijkstra(starts: Position[], tiles: TileType[][], isTarget: (pos: Position) => boolean, backwards: boolean = false, max: number = Infinity): SearchAlgorithmReturn | null {
-    let destination = inner_dijkstra(starts, tiles, isTarget, backwards, max);
+function dijkstra(starts: Position[], tiles: TileType[][], isTarget: (pos: Position) => boolean, options: SearchOptions = {}): SearchAlgorithmReturn | null {
+    let destination = inner_dijkstra(starts, tiles, isTarget, options);
     if (!destination) { return null; }
 
     const path: Position[] = []
@@ -88,19 +100,20 @@ function heuristic(a: Position, b: Position) {
     return Math.abs(a.x - b.x) + Math.abs(a.y - b.y)
 }
 
-function inner_a_star(start: Position, end: Position, tiles: TileType[][], max: number = Infinity): Point | null {
+function inner_a_star(start: Position, end: Position, tiles: TileType[][], options: SearchOptions = {}): Point | null {
+    const {
+        backwards = false,
+        max = Infinity,
+        units = []
+    } = options
+
     const queue = new PriorityQueue<Point>({ comparator: (a, b) => a.f - b.f });
     queue.queue({ pos: start, g: 0, f: Infinity });
     const visited = new Set<string>();
-    if (max === 69) {
-        //console.log(`-------------[ Start ${stringify(start)}, End: ${stringify(end)}, Queue Length: ${queue.length} ]-----------`)
-    }
     while (queue.length) {
         const current = queue.dequeue();
         const currentType = tiles[current.pos.x]![current.pos.y]
-        if (max === 69) {
-            //console.log(`Current: ${stringify(current.pos)}, ${areEqual(start, end)}, ${visited.has(stringify(current.pos))}, ${current.g > max}`)
-        }
+
         if (areEqual(current.pos, end)) {
             return current;
         }
@@ -112,18 +125,17 @@ function inner_a_star(start: Position, end: Position, tiles: TileType[][], max: 
         }
         visited.add(stringify(current.pos));
         const neighbors = getNeighbors(current.pos, tiles);
-        if (max === 69) {
-            //console.log(`Expanding ${stringify(current.pos)}`)
-        }
         for (let neighbor of neighbors) {
             if (visited.has(stringify(neighbor))) {
                 continue;
             }
 
             const neighborType = tiles[neighbor.x]![neighbor.y]
-            if (neighborType === "WALL" || (currentType === 'EMPTY' && neighborType === 'SPAWN')) {
-                continue;
-            }
+            if (neighborType === "WALL") { continue }
+            if (!backwards && currentType === 'EMPTY' && neighborType === 'SPAWN') { continue }
+            if (backwards && currentType === 'SPAWN' && neighborType === 'EMPTY') { continue }
+            if (units.some(unit => areEqual(neighbor, unit.position))) { continue }
+           
             const g = current.g + 1
             const f = g + heuristic(neighbor, end)
 
@@ -133,8 +145,8 @@ function inner_a_star(start: Position, end: Position, tiles: TileType[][], max: 
     return null;
 }
 
-function a_star(start: Position, end: Position, tiles: TileType[][], max: number = Infinity): SearchAlgorithmReturn | null {
-    let destination = inner_a_star(start, end, tiles, max);
+function a_star(start: Position, end: Position, tiles: TileType[][], options: SearchOptions = {}): SearchAlgorithmReturn | null {
+    let destination = inner_a_star(start, end, tiles, options);
     if (!destination) { return null; }
 
     const path: Position[] = []
@@ -154,5 +166,9 @@ function a_star(start: Position, end: Position, tiles: TileType[][], max: number
     }
 }
 
+function computeDistance(a: Position, b: Position, tiles: TileType[][], options: SearchOptions = {}): number | null {
+    const result = a_star(a, b, tiles, options)
+    return result ? result.distance : null
+}
 
-export { dijkstra, a_star }
+export { dijkstra, a_star,computeDistance }

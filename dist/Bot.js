@@ -10,8 +10,7 @@ class Bot {
         let currentTime = Date.now();
         const actions = this.coordinator.tick(gameMessage);
         this.times.push(Date.now() - currentTime);
-        console.log(`Time taken: ${this.times[this.times.length - 1]} ms, maximum time: ${Math.max(...this.times)}`);
-        console.log("ACTIONS", JSON.stringify(actions));
+        console.log(`Time taken: ${this.times[this.times.length - 1]} ms, maximum time: ${Math.max(...this.times)}ms`);
         return actions;
     }
 }

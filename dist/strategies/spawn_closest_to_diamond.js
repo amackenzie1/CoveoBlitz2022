@@ -13,7 +13,7 @@ const spawnUnits = (units, team, state) => {
     const isSpawnPoint = (pos) => !!spawnPoints.find(x => utils_1.areEqual(x, pos));
     const actions = [];
     for (let unit of unitsToSpawn) {
-        const result = search_1.dijkstra(diamonds.map(x => x.position), state.map.tiles, isSpawnPoint, true);
+        const result = search_1.dijkstra(diamonds.map(x => x.position), state.map.tiles, isSpawnPoint, { backwards: true });
         if (!result) {
             continue;
         }

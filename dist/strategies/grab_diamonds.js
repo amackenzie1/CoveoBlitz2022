@@ -10,15 +10,14 @@ function getAllUnits(state) {
     return allUnits;
 }
 const grabDiamonds = (units, team, state) => {
-    let takenDiamondStrings = getAllUnits(state).filter(x => x.hasDiamond).map(x => utils_1.stringify(x.position));
     units = units.filter(x => x.hasSpawned && !x.hasDiamond);
-    let diamonds = state.map.diamonds;
-    diamonds = diamonds.filter(x => !takenDiamondStrings.includes(utils_1.stringify(x.position)));
-    let actions = [];
-    function hasDiamond(pos) {
-        const diamondPositions = diamonds.map((diamond) => utils_1.stringify(diamond.position));
-        return diamondPositions.includes(utils_1.stringify(pos));
-    }
+    let takenDiamondStrings = state.teams
+        .flatMap(t => t.units)
+        .filter(x => x.hasSpawned && x.hasDiamond)
+        .map(x => utils_1.stringify(x.position));
+    let diamonds = state.map.diamonds.filter(x => !takenDiamondStrings.includes(utils_1.stringify(x.position)));
+    const actions = [];
+    const hasDiamond = (pos) => !!diamonds.find(d => utils_1.areEqual(pos, d.position));
     for (let unit of units) {
         let returned = search_1.dijkstra([unit.position], state.map.tiles, hasDiamond);
         if (!returned) {
