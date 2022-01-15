@@ -9,6 +9,15 @@ type Point = {
     parent?: Point
 }
 
+type SearchAlgorithmReturn = {
+    // Path contains the end but not the start
+    path: Position[]
+    distance: number
+    nextTarget: Position
+    endTarget: Position
+    startPosition: Position
+}
+
 function getNeighbors(pos: Position, tiles: TileType[][]) {
     const width = tiles.length
     const height = tiles[0]!.length
@@ -18,15 +27,22 @@ function getNeighbors(pos: Position, tiles: TileType[][]) {
     )
 }
 
-function inner_dijkstra(start: Position, tiles: TileType[][], isTarget: (pos: Position) => boolean): Point | null {
+function inner_dijkstra(starts: Position[], tiles: TileType[][], isTarget: (pos: Position) => boolean, backwards: boolean = false, max: number = Infinity): Point | null {
     const queue = new PriorityQueue<Point>({ comparator: (a, b) => a.g - b.g });
-    queue.queue({ pos: start, g: 0, f: 0 });
+    starts.forEach(start => queue.queue({ pos: start, g: 0, f: 0 }))
+
     const visited = new Set<string>();
     while (queue.length) {
         const current = queue.dequeue();
         const currentType = tiles[current.pos.x]![current.pos.y]
         if (isTarget(current.pos)) {
             return current;
+        }
+        if (visited.has(stringify(current.pos))) {
+            continue;
+        }
+        if (current.g > max){
+            return null;
         }
         visited.add(stringify(current.pos));
         const neighbors = getNeighbors(current.pos, tiles);
@@ -36,9 +52,10 @@ function inner_dijkstra(start: Position, tiles: TileType[][], isTarget: (pos: Po
             }
 
             const neighborType = tiles[neighbor.x]![neighbor.y]
-            if (neighborType === "WALL" || (currentType === 'EMPTY' && neighborType === 'SPAWN')) {
-                continue;
-            }
+            if (neighborType === "WALL") { continue }
+            if (!backwards && currentType === 'EMPTY' && neighborType === 'SPAWN') { continue }
+            if (backwards && currentType === 'SPAWN' && neighborType === 'EMPTY') { continue }
+
 
             queue.queue({ pos: neighbor, g: current.g + 1, f: 0, parent: current });
         }
@@ -46,15 +63,8 @@ function inner_dijkstra(start: Position, tiles: TileType[][], isTarget: (pos: Po
     return null;
 }
 
-// Path contains the end but not the start
-type SearchAlgorithmReturn = {
-    path: Position[]
-    distance: number
-    nextTarget: Position
-}
-
-function dijkstra(start: Position, tiles: TileType[][], isTarget: (pos: Position) => boolean): SearchAlgorithmReturn | null {
-    let destination = inner_dijkstra(start, tiles, isTarget);
+function dijkstra(starts: Position[], tiles: TileType[][], isTarget: (pos: Position) => boolean, backwards: boolean = false, max: number = Infinity): SearchAlgorithmReturn | null {
+    let destination = inner_dijkstra(starts, tiles, isTarget, backwards, max);
     if (!destination) { return null; }
 
     const path: Position[] = []
@@ -63,12 +73,14 @@ function dijkstra(start: Position, tiles: TileType[][], isTarget: (pos: Position
         destination = destination.parent;
     }
 
-    const nextTarget = path[0]!
+    const startPosition = destination.pos
 
     return {
         path: path.reverse(),
         distance: path.length,
-        nextTarget
+        nextTarget: path[0]!,
+        endTarget: path[path.length - 1]!,
+        startPosition
     }
 }
 
@@ -76,19 +88,33 @@ function heuristic(a: Position, b: Position) {
     return Math.abs(a.x - b.x) + Math.abs(a.y - b.y)
 }
 
-
-function inner_a_star(start: Position, end: Position, tiles: TileType[][]): Point | null {
+function inner_a_star(start: Position, end: Position, tiles: TileType[][], max: number = Infinity): Point | null {
     const queue = new PriorityQueue<Point>({ comparator: (a, b) => a.f - b.f });
     queue.queue({ pos: start, g: 0, f: Infinity });
     const visited = new Set<string>();
+    if (max === 69) {
+        //console.log(`-------------[ Start ${stringify(start)}, End: ${stringify(end)}, Queue Length: ${queue.length} ]-----------`)
+    }
     while (queue.length) {
         const current = queue.dequeue();
         const currentType = tiles[current.pos.x]![current.pos.y]
-        if (areEqual(start, end)) {
+        if (max === 69) {
+            //console.log(`Current: ${stringify(current.pos)}, ${areEqual(start, end)}, ${visited.has(stringify(current.pos))}, ${current.g > max}`)
+        }
+        if (areEqual(current.pos, end)) {
             return current;
+        }
+        if (visited.has(stringify(current.pos))) {
+            continue;
+        }
+        if (current.g > max){
+            return null;
         }
         visited.add(stringify(current.pos));
         const neighbors = getNeighbors(current.pos, tiles);
+        if (max === 69) {
+            //console.log(`Expanding ${stringify(current.pos)}`)
+        }
         for (let neighbor of neighbors) {
             if (visited.has(stringify(neighbor))) {
                 continue;
@@ -107,8 +133,8 @@ function inner_a_star(start: Position, end: Position, tiles: TileType[][]): Poin
     return null;
 }
 
-function a_star(start: Position, end: Position, tiles: TileType[][],): SearchAlgorithmReturn | null {
-    let destination = inner_a_star(start, end, tiles);
+function a_star(start: Position, end: Position, tiles: TileType[][], max: number = Infinity): SearchAlgorithmReturn | null {
+    let destination = inner_a_star(start, end, tiles, max);
     if (!destination) { return null; }
 
     const path: Position[] = []
@@ -117,12 +143,14 @@ function a_star(start: Position, end: Position, tiles: TileType[][],): SearchAlg
         destination = destination.parent;
     }
 
-    const nextTarget = path[0]!
+    const startPosition = destination.pos
 
     return {
         path: path.reverse(),
         distance: path.length,
-        nextTarget
+        nextTarget: path[0]!,
+        endTarget: path[path.length - 1]!,
+        startPosition: startPosition
     }
 }
 

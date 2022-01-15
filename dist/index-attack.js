@@ -8,18 +8,17 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const ws_1 = __importDefault(require("ws"));
 const Bot_1 = require("./Bot");
 const GameInterface_1 = require("./GameInterface");
-const main_1 = __importDefault(require("./coordinators/main"));
+const only_attack_1 = __importDefault(require("./coordinators/only_attack"));
 const strategy_coordinator_1 = require("./strategy-coordinator");
 const webSocket = new ws_1.default("ws://0.0.0.0:8765");
 let bot;
-let times = [];
 webSocket.onopen = (event) => {
-    bot = new Bot_1.Bot(new strategy_coordinator_1.StrategyCoordinator(main_1.default));
+    bot = new Bot_1.Bot(new strategy_coordinator_1.StrategyCoordinator(only_attack_1.default));
     if (process.env.TOKEN) {
         webSocket.send(JSON.stringify({ type: "REGISTER", token: process.env.TOKEN }));
     }
     else {
-        webSocket.send(JSON.stringify({ type: "REGISTER", teamName: "MyBot TypeScript" }));
+        webSocket.send(JSON.stringify({ type: "REGISTER", teamName: "ATTACK" }));
     }
 };
 webSocket.onmessage = (message) => {
@@ -28,11 +27,10 @@ webSocket.onmessage = (message) => {
     console.log(`Playing tick ${gameMessage.tick} of ${gameMessage.totalTick}`);
     let myTeam = gameMessage.getPlayerMapById().get(gameMessage.teamId);
     myTeam?.errors.forEach((error) => console.error(`Bot command Error: ${error}`));
-    const actions = bot.getNextMove(gameMessage);
     webSocket.send(JSON.stringify({
         type: "COMMAND",
         tick: gameMessage.tick,
-        actions: actions
+        actions: bot.getNextMove(gameMessage),
     }));
 };
-//# sourceMappingURL=index.js.map
+//# sourceMappingURL=index-attack.js.map

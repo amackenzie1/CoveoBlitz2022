@@ -33,16 +33,14 @@ class GameMessage {
     getVerticalSize() {
         return this.map.tiles[0].length;
     }
-    validateTileExists(position) {
-        if (position.x < 0 ||
-            position.y < 0 ||
-            position.x >= this.getHorizontalSize() ||
-            position.y >= this.getVerticalSize()) {
-            throw new PointOutOfMapException(position);
-        }
+    doesTileExist(position) {
+        return position.x >= 0 && position.x < this.getHorizontalSize()
+            && position.y >= 0 && position.y < this.getVerticalSize();
     }
     getTileTypeAt(position) {
-        this.validateTileExists(position);
+        if (!this.doesTileExist(position)) {
+            return null;
+        }
         return this.map.tiles[position.x][position.y];
     }
     getPlayerMapById() {

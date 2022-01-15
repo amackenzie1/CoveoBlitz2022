@@ -3,23 +3,21 @@
 import WebSocket from "ws";
 import { Bot } from "./Bot";
 import { GameMessage } from "./GameInterface";
-import mainCoordinator from './coordinators/main'
+import attackCoordinator from './coordinators/only_attack'
 import { StrategyCoordinator } from "./strategy-coordinator";
 
 const webSocket = new WebSocket("ws://0.0.0.0:8765");
 let bot: Bot;
 
-let times : number [] = []
-
 webSocket.onopen = (event: WebSocket.OpenEvent) => {
-  bot = new Bot(new StrategyCoordinator(mainCoordinator));
+  bot = new Bot(new StrategyCoordinator(attackCoordinator));
   if (process.env.TOKEN) {
     webSocket.send(
       JSON.stringify({ type: "REGISTER", token: process.env.TOKEN })
     );
   } else {
     webSocket.send(
-      JSON.stringify({ type: "REGISTER", teamName: "MyBot TypeScript" })
+      JSON.stringify({ type: "REGISTER", teamName: "ATTACK" })
     );
   }
 };
@@ -33,15 +31,13 @@ webSocket.onmessage = (message: WebSocket.MessageEvent) => {
   let myTeam = gameMessage.getPlayerMapById().get(gameMessage.teamId);
   myTeam?.errors.forEach((error) =>
     console.error(`Bot command Error: ${error}`)
-  );  
-
-  const actions = bot.getNextMove(gameMessage)
+  );
 
   webSocket.send(
     JSON.stringify({
       type: "COMMAND",
       tick: gameMessage.tick,
-      actions: actions
+      actions: bot.getNextMove(gameMessage),
     })
   );
 };

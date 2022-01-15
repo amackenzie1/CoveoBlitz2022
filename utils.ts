@@ -13,8 +13,8 @@ const areEqual = (a: Position, b: Position): boolean => {
 
 const NEIGHBORS: Position[] = [
   { x: 1, y: 0 },
-  { x: -1, y: 0 },
   { x: 0, y: 1 },
+  { x: -1, y: 0 },
   { x: 0, y: -1 },
 ]
 
@@ -28,6 +28,6 @@ const allNeighbors = (pos: Position): Position[] => {
 }
 
 const stringify = (pos: Position): string => `${pos.x},${pos.y}`
+const l1Distance = (a: Position, b: Position): number => Math.abs(a.x - b.x) + Math.abs(a.y - b.y)
 
-
-export { add, areEqual, NEIGHBORS, randomNeighbor, allNeighbors, stringify }
+export { add, areEqual, NEIGHBORS, randomNeighbor, allNeighbors, stringify, l1Distance }

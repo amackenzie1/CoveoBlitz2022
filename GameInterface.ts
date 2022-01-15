@@ -104,19 +104,13 @@ export class GameMessage implements GameTick {
     return this.map.tiles[0]!.length;
   }
 
-  public validateTileExists(position: Position) {
-    if (
-      position.x < 0 ||
-      position.y < 0 ||
-      position.x >= this.getHorizontalSize() ||
-      position.y >= this.getVerticalSize()
-    ) {
-      throw new PointOutOfMapException(position);
-    }
+  public doesTileExist(position: Position) {
+    return position.x >= 0 && position.x < this.getHorizontalSize()
+      && position.y >= 0 && position.y < this.getVerticalSize()
   }
 
-  public getTileTypeAt(position: Position): TileType {
-    this.validateTileExists(position);
+  public getTileTypeAt(position: Position): TileType | null {
+    if (!this.doesTileExist(position)) { return null }
     return this.map.tiles[position.x]![position.y]!;
   }
 

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.allNeighbors = exports.randomNeighbor = exports.NEIGHBORS = exports.areEqual = exports.add = void 0;
+exports.l1Distance = exports.stringify = exports.allNeighbors = exports.randomNeighbor = exports.NEIGHBORS = exports.areEqual = exports.add = void 0;
 const add = (a, b) => {
     return {
         x: a.x + b.x,
@@ -28,4 +28,8 @@ const allNeighbors = (pos) => {
     return NEIGHBORS.map(diff => add(pos, diff));
 };
 exports.allNeighbors = allNeighbors;
+const stringify = (pos) => `${pos.x},${pos.y}`;
+exports.stringify = stringify;
+const l1Distance = (a, b) => Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
+exports.l1Distance = l1Distance;
 //# sourceMappingURL=utils.js.map

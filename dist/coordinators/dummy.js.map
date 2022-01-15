@@ -1,1 +1,1 @@
-{"version":3,"file":"dummy.js","sourceRoot":"","sources":["../../coordinators/dummy.ts"],"names":[],"mappings":";;;;;AACA,kEAA+C;AAC/C,gEAA6C;AAE7C,MAAM,aAAa,GAAkB,GAAG,EAAE,CAAC,CAAC,eAAU,EAAE,gBAAW,CAAC,CAAA;AAEpE,kBAAe,aAAa,CAAA"}
+{"version":3,"file":"dummy.js","sourceRoot":"","sources":["../../coordinators/dummy.ts"],"names":[],"mappings":";;;;;AAEA,sGAAgE;AAChE,gFAAuD;AAEvD,MAAM,aAAa,GAAkB,GAAG,EAAE,CAAC,CAAC,kCAAU,EAAE,uBAAY,CAAC,CAAA;AAErE,kBAAe,aAAa,CAAA"}
