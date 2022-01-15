@@ -5,7 +5,7 @@ import { Bot } from "./Bot";
 import { GameMessage } from "./GameInterface";
 
 const webSocket = new WebSocket("ws://0.0.0.0:8765");
-let bot;
+let bot: Bot;
 
 webSocket.onopen = (event: WebSocket.OpenEvent) => {
   bot = new Bot();
@@ -27,7 +27,7 @@ webSocket.onmessage = (message: WebSocket.MessageEvent) => {
   console.log(`Playing tick ${gameMessage.tick} of ${gameMessage.totalTick}`);
 
   let myTeam = gameMessage.getPlayerMapById().get(gameMessage.teamId);
-  myTeam.errors.forEach((error) =>
+  myTeam?.errors.forEach((error) =>
     console.error(`Bot command Error: ${error}`)
   );
 

@@ -40,9 +40,9 @@ export interface Diamond {
 }
 
 export class TickGameConfig {
-  pointsPerDiamond: number;
-  maximumDiamondSummonLevel: number;
-  initialDiamondSummonLevel: number;
+  pointsPerDiamond: number = 0;
+  maximumDiamondSummonLevel: number = 0;
+  initialDiamondSummonLevel: number = 0;
 }
 
 export interface GameTick {
@@ -81,16 +81,16 @@ export class PointOutOfMapException extends Error {
 }
 
 export class GameMessage implements GameTick {
-  public readonly tick: number;
-  public readonly totalTick: number;
-  public readonly teamId: string;
-  public readonly teams: Team[];
+  public readonly tick: number = 0;
+  public readonly totalTick: number = 0;
+  public readonly teamId: string = "";
+  public readonly teams: Team[] = [];
   public readonly map: {
     tiles: TileType[][];
     diamonds: Diamond[];
-  };
-  public readonly gameConfig: TickGameConfig;
-  public readonly teamPlayOrderings: TeamPlayOrderings;
+  } = {} as any;
+  public readonly gameConfig: TickGameConfig = {} as any;
+  public readonly teamPlayOrderings: TeamPlayOrderings = {};
 
   constructor(private rawTick: GameTick) {
     Object.assign(this, rawTick);
@@ -101,7 +101,7 @@ export class GameMessage implements GameTick {
   }
 
   public getVerticalSize(): number {
-    return this.map.tiles[0].length;
+    return this.map.tiles[0]!.length;
   }
 
   public validateTileExists(position: Position) {
@@ -117,7 +117,7 @@ export class GameMessage implements GameTick {
 
   public getTileTypeAt(position: Position): TileType {
     this.validateTileExists(position);
-    return this.map.tiles[position.x][position.y];
+    return this.map.tiles[position.x]![position.y]!;
   }
 
   public getPlayerMapById() {
