@@ -26,7 +26,7 @@ const spawnFarthest: Strategy = (units, team, state) => {
       const distToSpawn = computeDistance(spawnPoints, diamond.position, { state })
 
       if (!distToSpawn || distToSpawn > 8) { return null }
-      if (distToEnemies && distToEnemies < 20) { return null }
+      if (distToEnemies && distToEnemies < 12) { return null }
       return diamond.position
     })
     .filter(x => x)[0]
