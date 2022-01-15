@@ -1,5 +1,5 @@
 import { StrategyCoordinator, GetStrategies } from "../strategy-coordinator";
-import randomMoves from "../strategies/dummy_random";
+import randomWalk from "../strategies/random_walk";
 import spawnUnits from "../strategies/spawn_closest_to_diamond";
 import grabDiamonds from "../strategies/grab_diamonds";
 import holdSimple from "../strategies/hold_simple";
@@ -11,7 +11,8 @@ const getStrategies: GetStrategies = () => [
     [grabDiamonds, 'GRAB-DIAMONDS'], 
     [summonStrategy, 'SUMMON-SIMPLE'], 
     [holdSimple, 'HOLD-SIMPLE'], 
-    [wolfPack, 'WOLF-PACK']
+    [wolfPack, 'WOLF-PACK'],
+    [randomWalk, 'RANDOM-WALK'],
 ]
 
 export default getStrategies

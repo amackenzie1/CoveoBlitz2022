@@ -1,6 +1,7 @@
 import { Strategy } from '../strategy-coordinator'
-import { Action, Diamond } from '../GameInterface'
-import { a_star } from "../search"
+import { Action, Diamond, Position } from '../GameInterface'
+import { a_star, SearchAlgorithmReturn } from "../search"
+import { freeNeighbors } from '../utils'
 
 function diamondValue(diamond: Diamond) {
   return diamond.summonLevel * 20 + diamond.points
@@ -36,6 +37,25 @@ const wolfPack: Strategy = (units, team, state) => {
         unitId: unit.id
       })
       continue
+    }
+
+    if (returned.distance <= 1 && state.getTileTypeAt(unit.position) === 'SPAWN') {
+      // Need to get out of spawn in order to kill
+      const target = freeNeighbors(returned.endTarget, state)
+        .map<[Position, SearchAlgorithmReturn | null]>(pos => [pos, a_star(unit.position, pos, { state })])
+        .filter(([_, result]) => result !== null)
+        .sort(([_, a], [__, b]) => a!.distance - b!.distance)[0]?.[1]?.nextTarget
+      
+      if (target) {
+        actions.push({
+          type: 'UNIT',
+          action: 'MOVE',
+          target: target,
+          unitId: unit.id
+        })
+      } else {
+        continue
+      }
     }
 
     actions.push({
