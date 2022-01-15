@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const search_1 = require("../search");
 const utils_1 = require("../utils");
+const Linfty_prioritization_1 = require("../Linfty_prioritization");
 function diamondValue(diamond) {
     return diamond.summonLevel * 20 + diamond.points;
 }
@@ -16,7 +17,7 @@ function averageDistance(diamond, units, state) {
     }
     return distances.reduce((a, b) => a + b, 0) / distances.length;
 }
-function chooseTarget(units, team, state) {
+function oldChooseTarget(units, team, state) {
     let potentialTargets = state.map.diamonds
         .filter(x => !x.ownerId || !team.units.find(u => u.id === x.ownerId))
         .sort((x, y) => diamondValue(y) - diamondValue(x))
@@ -31,7 +32,7 @@ function chooseTarget(units, team, state) {
     }
     return targetsWithDistances[0][0].position;
 }
-const wolfPack = (units, team, state) => {
+const bearPack = (units, team, state) => {
     units = units.filter(x => x.hasSpawned && !x.hasDiamond);
     // let diamondValues: [Diamond, number][] = []
     // for (let diamond of state.map.diamonds) {
@@ -40,7 +41,7 @@ const wolfPack = (units, team, state) => {
     // }
     // diamondValues.sort((x, y) => y[1] - x[1])
     // if (!diamondValues.length) { return [] }
-    const target = chooseTarget(units, team, state);
+    const target = Linfty_prioritization_1.chooseTarget(units, team, state);
     if (!target) {
         return [];
     }
@@ -104,5 +105,5 @@ const wolfPack = (units, team, state) => {
     }
     return actions;
 };
-exports.default = wolfPack;
-//# sourceMappingURL=wolf_pack.js.map
+exports.default = bearPack;
+//# sourceMappingURL=bear_pack.js.map

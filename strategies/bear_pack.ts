@@ -2,6 +2,7 @@ import { Strategy } from '../strategy-coordinator'
 import { Action, Diamond, Unit, Team, GameMessage, Position } from '../GameInterface'
 import { a_star, SearchAlgorithmReturn, dijkstra } from "../search"
 import { freeNeighbors, hasClearLOS, areEqual, getVineRegion } from '../utils'
+import {chooseTarget } from '../Linfty_prioritization'
 
 function diamondValue(diamond: Diamond) {
   return diamond.summonLevel * 20 + diamond.points
@@ -19,7 +20,7 @@ function averageDistance(diamond: Diamond, units: Unit[], state: GameMessage) {
   return distances.reduce((a, b) => a + b, 0) / distances.length
 }
 
-function chooseTarget(units: Unit[], team: Team, state: GameMessage): Position | null {
+function oldChooseTarget(units: Unit[], team: Team, state: GameMessage): Position | null {
   let potentialTargets = state.map.diamonds
     .filter(x => !x.ownerId || !team.units.find(u => u.id === x.ownerId))
     .sort((x, y) => diamondValue(y) - diamondValue(x))
@@ -37,7 +38,7 @@ function chooseTarget(units: Unit[], team: Team, state: GameMessage): Position |
   return targetsWithDistances[0]![0].position
 }
 
-const wolfPack: Strategy = (units, team, state) => {
+const bearPack: Strategy = (units, team, state) => {
   units = units.filter(x => x.hasSpawned && !x.hasDiamond)
 
   // let diamondValues: [Diamond, number][] = []
@@ -50,6 +51,7 @@ const wolfPack: Strategy = (units, team, state) => {
   // if (!diamondValues.length) { return [] }
 
   const target = chooseTarget(units, team, state)
+  
   if (!target) { return [] }
   console.log("Target chosen!")
   const enemyPositions = state.teams
@@ -114,4 +116,4 @@ const wolfPack: Strategy = (units, team, state) => {
   return actions
 }
 
-export default wolfPack
+export default bearPack

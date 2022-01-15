@@ -12,7 +12,7 @@ const killClose = (units, team, state) => {
         .map(u => u.position);
     const actions = [];
     for (let unit of units) {
-        const result = search_1.dijkstra([unit.position], pos => !!enemyPositions.find(pos2 => utils_1.areEqual(pos, pos2)), { state, max: 3 });
+        const result = search_1.dijkstra([unit.position], pos => !!enemyPositions.find(pos2 => utils_1.areEqual(pos, pos2)), { state, max: 3, isAttack: true });
         if (!result) {
             continue;
         }

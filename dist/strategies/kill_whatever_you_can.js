@@ -2,16 +2,17 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const search_1 = require("../search");
 const utils_1 = require("../utils");
-const killSummoning = (units, team, state) => {
+const killAnything = (units, team, state) => {
     units = units.filter(x => x.hasSpawned && !x.hasDiamond);
+    const weakTeams = utils_1.getTeamsWithLowerPriorityThisRound(team.id, state);
     const enemyPositions = state.teams
-        .filter(t => t.id !== team.id)
+        .filter(t => weakTeams.includes(t.id))
         .flatMap(t => t.units)
-        .filter(u => u.hasSpawned && u.hasDiamond && u.isSummoning)
+        .filter(u => u.hasSpawned && u.hasDiamond)
         .map(u => u.position);
     const actions = [];
     for (let unit of units) {
-        const result = search_1.dijkstra([unit.position], pos => !!enemyPositions.find(pos2 => utils_1.areEqual(pos, pos2)), { state, max: 3, isAttack: true });
+        const result = search_1.dijkstra([unit.position], pos => !!enemyPositions.find(pos2 => utils_1.areEqual(pos, pos2)), { state, isAttack: true });
         if (!result) {
             continue;
         }
@@ -25,5 +26,5 @@ const killSummoning = (units, team, state) => {
     }
     return actions;
 };
-exports.default = killSummoning;
-//# sourceMappingURL=kill_summoning.js.map
+exports.default = killAnything;
+//# sourceMappingURL=kill_whatever_you_can.js.map

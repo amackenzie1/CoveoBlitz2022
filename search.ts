@@ -15,6 +15,7 @@ type SearchOptions = {
     max?: number
     backwards?: boolean
     ignoreUnitObstacles?: boolean
+    isAttack?: boolean
 }
 
 type SearchAlgorithmReturn = {
@@ -49,8 +50,10 @@ function inner_dijkstra(starts: Position[], isTarget: (pos: Position) => boolean
         backwards = false,
         max = Infinity,
         ignoreUnitObstacles = false,
-        state
+        state,
+        isAttack = false
     } = options
+    if (isAttack && backwards) { throw "Can't do that here!" }
 
     const tiles = state.map.tiles
     const occupiedTiles = getOccupiedTiles(state, ignoreUnitObstacles)
@@ -84,7 +87,11 @@ function inner_dijkstra(starts: Position[], isTarget: (pos: Position) => boolean
 
 
             const neww: Point = { pos: neighbor, g: current.g + 1, f: 0, parent: current }
-            if (isTarget(neighbor)) { return neww }
+            if (isTarget(neighbor)) {
+                if (!isAttack || state.getTileTypeAt(current.pos) !== "SPAWN") {
+                    return neww
+                }
+            }
 
             if (occupiedTiles.has(stringify(neighbor))) { continue }
 
@@ -124,8 +131,11 @@ function inner_a_star(start: Position, end: Position, options: SearchOptions): P
         backwards = false,
         max = Infinity,
         ignoreUnitObstacles = false,
-        state
+        state,
+        isAttack = false
     } = options
+
+    if (isAttack && backwards) { throw "Can't do that here!" }
 
     const tiles = state.map.tiles
     const occupiedTiles = getOccupiedTiles(state, ignoreUnitObstacles)
@@ -160,7 +170,11 @@ function inner_a_star(start: Position, end: Position, options: SearchOptions): P
             const g = current.g + 1
             const f = g + heuristic(neighbor, end)
             const neww = { pos: neighbor, g, f, parent: current }
-            if (areEqual(neighbor, end)) { return neww }
+            if (areEqual(neighbor, end)) {
+                if (!isAttack || state.getTileTypeAt(current.pos) !== "SPAWN") {
+                    return neww
+                }
+            }
 
             if (occupiedTiles.has(stringify(neighbor))) { continue }
             queue.queue(neww);
@@ -190,8 +204,9 @@ function a_star(start: Position, end: Position, options: SearchOptions): SearchA
     }
 }
 
-function computeDistance(a: Position, b: Position, options: SearchOptions): number | null {
-    const result = a_star(a, b, options)
+function computeDistance(a: Position | Position[], b: Position | Position[], options: SearchOptions): number | null {
+    const isB = Array.isArray(b) ? (pos: Position) => !!b.find(x => areEqual(x, pos)) : (pos: Position) => areEqual(pos, b)
+    const result = dijkstra(Array.isArray(a) ? a : [a], isB, options)
     return result ? result.distance : null
 }
 

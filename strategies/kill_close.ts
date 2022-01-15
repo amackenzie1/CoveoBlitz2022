@@ -15,7 +15,7 @@ const killClose: Strategy = (units, team, state) => {
 
   const actions: Action[] = []
   for (let unit of units) {
-    const result = dijkstra([unit.position], pos => !!enemyPositions.find(pos2 => areEqual(pos, pos2)), { state, max: 3 })
+    const result = dijkstra([unit.position], pos => !!enemyPositions.find(pos2 => areEqual(pos, pos2)), { state, max: 3, isAttack: true })
     if (!result) { continue }
 
     const { nextTarget, distance } = result

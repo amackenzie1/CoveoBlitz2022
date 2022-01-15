@@ -21,7 +21,10 @@ function getNeighbors(pos, tiles) {
         y >= 0 && y < height);
 }
 function inner_dijkstra(starts, isTarget, options) {
-    const { backwards = false, max = Infinity, ignoreUnitObstacles = false, state } = options;
+    const { backwards = false, max = Infinity, ignoreUnitObstacles = false, state, isAttack = false } = options;
+    if (isAttack && backwards) {
+        throw "Can't do that here!";
+    }
     const tiles = state.map.tiles;
     const occupiedTiles = getOccupiedTiles(state, ignoreUnitObstacles);
     const queue = new ts_priority_queue_1.default({ comparator: (a, b) => a.g - b.g });
@@ -57,7 +60,9 @@ function inner_dijkstra(starts, isTarget, options) {
             }
             const neww = { pos: neighbor, g: current.g + 1, f: 0, parent: current };
             if (isTarget(neighbor)) {
-                return neww;
+                if (!isAttack || state.getTileTypeAt(current.pos) !== "SPAWN") {
+                    return neww;
+                }
             }
             if (occupiedTiles.has(utils_1.stringify(neighbor))) {
                 continue;
@@ -91,7 +96,10 @@ function heuristic(a, b) {
     return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
 }
 function inner_a_star(start, end, options) {
-    const { backwards = false, max = Infinity, ignoreUnitObstacles = false, state } = options;
+    const { backwards = false, max = Infinity, ignoreUnitObstacles = false, state, isAttack = false } = options;
+    if (isAttack && backwards) {
+        throw "Can't do that here!";
+    }
     const tiles = state.map.tiles;
     const occupiedTiles = getOccupiedTiles(state, ignoreUnitObstacles);
     const queue = new ts_priority_queue_1.default({ comparator: (a, b) => a.f - b.f });
@@ -129,7 +137,9 @@ function inner_a_star(start, end, options) {
             const f = g + heuristic(neighbor, end);
             const neww = { pos: neighbor, g, f, parent: current };
             if (utils_1.areEqual(neighbor, end)) {
-                return neww;
+                if (!isAttack || state.getTileTypeAt(current.pos) !== "SPAWN") {
+                    return neww;
+                }
             }
             if (occupiedTiles.has(utils_1.stringify(neighbor))) {
                 continue;
@@ -160,7 +170,8 @@ function a_star(start, end, options) {
 }
 exports.a_star = a_star;
 function computeDistance(a, b, options) {
-    const result = a_star(a, b, options);
+    const isB = Array.isArray(b) ? (pos) => !!b.find(x => utils_1.areEqual(x, pos)) : (pos) => utils_1.areEqual(pos, b);
+    const result = dijkstra(Array.isArray(a) ? a : [a], isB, options);
     return result ? result.distance : null;
 }
 exports.computeDistance = computeDistance;

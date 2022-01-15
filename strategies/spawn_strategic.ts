@@ -2,6 +2,7 @@ import { Strategy } from '../strategy-coordinator'
 import { Action, Position } from '../GameInterface'
 import { dijkstra } from '../search'
 import { areEqual, stringify } from '../utils'
+import { chooseTarget } from '../Linfty_prioritization'
 
 const spawnUnits: Strategy = (units, team, state) => {
   const unitsToSpawn = units.filter(x => !x.hasSpawned)
@@ -10,12 +11,14 @@ const spawnUnits: Strategy = (units, team, state) => {
   let diamonds = state.map.diamonds
     .filter(x => !x.ownerId || !team.units.find(u => u.id === x.ownerId))
 
-  const spawnPoints = state.getSpawnPoints()
+  let spawnPoints = state.getSpawnPoints()
   const isSpawnPoint = (pos: Position) => !!spawnPoints.find(x => areEqual(x, pos))
 
   const actions: Action[] = []
+  const target = chooseTarget('unspawned', team, state)
+  if (!target){ return [] }
   for (let unit of unitsToSpawn) {
-    const result = dijkstra(diamonds.map(x => x.position), isSpawnPoint, { state: state, backwards: true })
+    const result = dijkstra(spawnPoints, (x) => (areEqual(x, target)), {state})
     if (!result) { continue }
 
     const { startPosition, endTarget } = result
@@ -26,7 +29,7 @@ const spawnUnits: Strategy = (units, team, state) => {
       target: endTarget
     })
 
-    diamonds = diamonds.filter(({ position }) => !areEqual(position, startPosition))
+    spawnPoints = spawnPoints.filter((position ) => !areEqual(position, endTarget))
   }
 
   return actions

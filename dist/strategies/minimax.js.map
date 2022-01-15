@@ -1,0 +1,1 @@
+{"version":3,"file":"minimax.js","sourceRoot":"","sources":["../../strategies/minimax.ts"],"names":[],"mappings":";;AAIA,SAAS,YAAY,CAAC,KAAa,EAAE,MAAc;IAC/C,KAAK,GAAG,KAAK,CAAC,MAAM,CAAC,CAAC,CAAC,EAAE,CAAC,CAAC,CAAC,MAAM,KAAK,MAAM,CAAC,CAAA;IAC9C,MAAM,eAAe,GAAa,EAAE,CAAA;AACxC,CAAC"}
