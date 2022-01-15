@@ -12,6 +12,11 @@ class Bot {
         this.allUnitsWithDiamonds = [];
     }
     getNextMove(gameMessage) {
+        try {
+        }
+        catch (error) {
+            console;
+        }
         this.collectInsights(gameMessage);
         let currentTime = Date.now();
         const actions = this.coordinator.tick(gameMessage, this.insights);

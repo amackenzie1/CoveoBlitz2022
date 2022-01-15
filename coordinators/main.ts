@@ -1,6 +1,7 @@
 import { StrategyCoordinator, GetStrategies } from "../strategy-coordinator";
 import randomWalk from "../strategies/random_walk";
 import spawnUnits from "../strategies/spawn_closest";
+import spawnFar from "../strategies/spawn_farthest";
 import spawnStrategic from "../strategies/spawn_strategic";
 import grabDiamonds from "../strategies/grab_diamonds";
 import grabDiamondClose from "../strategies/grab_close";
@@ -15,13 +16,14 @@ import killOwnUnit from "../strategies/kill_own_units";
 
 const getStrategies: GetStrategies = (state) => {
     return [
+        state.tick > 10 && [spawnFar, 'SPAWN-FAR'],
         state.tick > 5 && [spawnStrategic, 'SPAWN-STRATEGIC'],
         [spawnUnits, 'SPAWN-CLOSEST'],
-        [killClose, 'KILL-CLOSE'],
         state.tick <= 30 && [grabDiamonds, 'GRAB-DIAMONDS'],
         [summonStrategy, 'SUMMON-SIMPLE'],
         [holdComplex, 'HOLD-COMPLEX'],
         [grabDiamondClose, 'GRAB-DIAMOND-CLOSE'],
+        [killClose, 'KILL-CLOSE'],
         [bearPack, 'BEAR-PACK'],
         [killOwnUnit, 'KILL-OWN'],
         [killAnything, "KILL-ANYTHING"],

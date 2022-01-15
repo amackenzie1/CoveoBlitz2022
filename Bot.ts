@@ -14,14 +14,25 @@ export class Bot {
   ) { }
 
   getNextMove(gameMessage: GameMessage): Action[] {
-    this.collectInsights(gameMessage)
+    try {
+      this.collectInsights(gameMessage)
+    } catch (error) {
+      console.log(`FAILED TO COLLECT INSIGHTS`)
+      console.log(error)
+    }
 
-    let currentTime = Date.now()
-    const actions = this.coordinator.tick(gameMessage, this.insights)
+    try {
+      let currentTime = Date.now()
+      const actions = this.coordinator.tick(gameMessage, this.insights)
 
-    this.times.push(Date.now() - currentTime)
-    console.log(`Time taken: ${this.times[this.times.length - 1]} ms, maximum time: ${Math.max(...this.times)}ms`)
-    return actions
+      this.times.push(Date.now() - currentTime)
+      console.log(`Time taken: ${this.times[this.times.length - 1]} ms, maximum time: ${Math.max(...this.times)}ms`)
+      return actions
+    } catch (error) {
+      console.log(`FAILED TO TICK`)
+      console.log(error)
+      return []
+    }
   }
 
   getLogs(): string[][] {

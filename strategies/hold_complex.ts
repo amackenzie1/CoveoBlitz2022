@@ -64,7 +64,6 @@ function getBestOutOfTotallySafe(totallySafe: Position[], enemyUnits: Position[]
       bestPosition = pos
     }
   }
-
   return bestPosition
 }
 const getSafePosition = (unit: Unit, team: Team, state: GameMessage, enemyPositions: Position[], provider: InsightsProvider): [Position, number] | null => {

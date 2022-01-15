@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const random_walk_1 = __importDefault(require("../strategies/random_walk"));
 const spawn_closest_1 = __importDefault(require("../strategies/spawn_closest"));
+const spawn_farthest_1 = __importDefault(require("../strategies/spawn_farthest"));
 const spawn_strategic_1 = __importDefault(require("../strategies/spawn_strategic"));
 const grab_diamonds_1 = __importDefault(require("../strategies/grab_diamonds"));
 const grab_close_1 = __importDefault(require("../strategies/grab_close"));
@@ -16,13 +17,14 @@ const kill_whatever_you_can_1 = __importDefault(require("../strategies/kill_what
 const kill_own_units_1 = __importDefault(require("../strategies/kill_own_units"));
 const getStrategies = (state) => {
     return [
+        state.tick > 10 && [spawn_farthest_1.default, 'SPAWN-FAR'],
         state.tick > 5 && [spawn_strategic_1.default, 'SPAWN-STRATEGIC'],
         [spawn_closest_1.default, 'SPAWN-CLOSEST'],
-        [kill_close_1.default, 'KILL-CLOSE'],
         state.tick <= 30 && [grab_diamonds_1.default, 'GRAB-DIAMONDS'],
         [simple_summon_1.default, 'SUMMON-SIMPLE'],
         [hold_complex_1.default, 'HOLD-COMPLEX'],
         [grab_close_1.default, 'GRAB-DIAMOND-CLOSE'],
+        [kill_close_1.default, 'KILL-CLOSE'],
         [bear_pack_1.default, 'BEAR-PACK'],
         [kill_own_units_1.default, 'KILL-OWN'],
         [kill_whatever_you_can_1.default, "KILL-ANYTHING"],
