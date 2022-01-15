@@ -2,23 +2,25 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const utils_1 = require("../utils");
 const search_1 = require("../search");
+const Linfty_prioritization_1 = require("../Linfty_prioritization");
 const killOwnUnits = (units, team, state) => {
     if (state.teams.length !== 2 || state.map.diamonds.every((x) => x.points < 150 || team.units.some(u => !u.hasSpawned))) {
         return [];
     }
     units = units.filter(x => x.hasSpawned && !x.hasDiamond);
-    let topDiamond = state.map.diamonds.sort((a, b) => b.points - a.points)[0];
-    let returned = search_1.dijkstra(units.map(x => x.position), (x) => utils_1.areEqual(x, topDiamond.position), { state });
-    if (returned) {
+    let result = Linfty_prioritization_1.chooseTargetWithValue(units, team, state);
+    let result2 = Linfty_prioritization_1.chooseTargetWithValue('unspawned', team, state);
+    if (!(!result && result2) || (result && result2 && result[1] < result2[1])) {
         return [];
     }
     const isOurUnit = (position) => {
-        return team.units.some(u => utils_1.areEqual(u.position, position));
+        return team.units.some(u => u.hasSpawned && utils_1.areEqual(u.position, position));
     };
-    returned = search_1.dijkstra(units.map(x => x.position), isOurUnit, { state });
-    if (!returned) {
+    let returned = search_1.dijkstra(units.map(x => x.position), isOurUnit, { state });
+    if (!returned || !returned.endTarget || !returned.startPosition) {
         return [];
     }
+    console.log(`Looking to KILL-OWN for target ${utils_1.stringify(result2[0])}`);
     const firstPosition = returned.startPosition;
     const secondPosition = returned.endTarget;
     if (utils_1.l1Distance(firstPosition, secondPosition) == 1) {

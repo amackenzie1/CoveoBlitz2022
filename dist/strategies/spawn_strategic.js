@@ -15,6 +15,7 @@ const spawnUnits = (units, team, state) => {
     if (!target) {
         return [];
     }
+    console.log("SPAWN Target chosen:", utils_1.stringify(target));
     for (let unit of unitsToSpawn) {
         const result = search_1.dijkstra(spawnPoints, (x) => (utils_1.areEqual(x, target)), { state });
         if (!result) {

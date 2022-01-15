@@ -14,6 +14,7 @@ const spawnUnits: Strategy = (units, team, state) => {
   const actions: Action[] = []
   const target = chooseTarget('unspawned', team, state)
   if (!target) { return [] }
+  console.log("SPAWN Target chosen:", stringify(target))
   for (let unit of unitsToSpawn) {
     const result = dijkstra(spawnPoints, (x) => (areEqual(x, target)), { state })
     if (!result) { continue }

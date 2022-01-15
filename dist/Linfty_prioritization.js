@@ -1,12 +1,16 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.chooseTarget = void 0;
+exports.chooseTargetWithValue = exports.chooseTarget = void 0;
 const search_1 = require("./search");
 const utils_1 = require("./utils");
 const chooseTarget = (freeAgentsOrUnspawned, team, state) => {
-    return chooseDiamond(freeAgentsOrUnspawned, team, state)?.[0] || null;
+    return chooseTargetWithValue(freeAgentsOrUnspawned, team, state)?.[0] || null;
 };
 exports.chooseTarget = chooseTarget;
+const chooseTargetWithValue = (freeAgentsOrUnspawned, team, state) => {
+    return chooseHeldDiamond(freeAgentsOrUnspawned, team, state) || null;
+};
+exports.chooseTargetWithValue = chooseTargetWithValue;
 const chooseDiamond = (freeAgentsOrUnspawned, ourTeam, state) => {
     const ourUnitPositions = freeAgentsOrUnspawned === 'unspawned'
         ? state.getSpawnPoints()
@@ -27,7 +31,7 @@ const chooseDiamond = (freeAgentsOrUnspawned, ourTeam, state) => {
             diamondTeams[diamond.id] = t;
         }
     });
-    heldDiamonds = heldDiamonds.filter(d => !!diamondTeams[d.id]);
+    heldDiamonds = heldDiamonds.filter(d => !!diamondTeams[d.id] && diamondTeams[d.id].id !== ourTeam.id);
     let unheldDiamonds = state.map.diamonds.filter(x => !x.ownerId);
     // rate of growth
     const lambdaLow = 3;
@@ -56,7 +60,7 @@ const chooseDiamond = (freeAgentsOrUnspawned, ourTeam, state) => {
         distsDTEnnU[diamond.id] = cap(distDiamondToEnemyOfUs);
     }
     let maxDistDTU = Math.max(...(Object.values(distsDTU).filter(x => Number.isFinite(x))));
-    maxDistDTU = Number.isFinite(maxDistDTU) ? maxDistDTU : maxHorizon;
+    maxDistDTU = Math.min(Number.isFinite(maxDistDTU) ? maxDistDTU : maxHorizon, 10);
     const scoreIfLeftUnchecked = {};
     const ourScoreIfPursued = {};
     for (let diamond of heldDiamonds) {
@@ -175,12 +179,7 @@ const chooseHeldDiamond = (freeAgentsOrUnspawned, ourTeam, state) => {
             diamondTeams[diamond.id] = t;
         }
     });
-    const l1 = heldDiamonds.length;
-    heldDiamonds = heldDiamonds.filter(d => !!diamondTeams[d.id]);
-    const l2 = heldDiamonds.length;
-    if (l1 !== l2) {
-        console.log("WHATTT");
-    }
+    heldDiamonds = heldDiamonds.filter(d => !!diamondTeams[d.id] && diamondTeams[d.id].id !== ourTeam.id);
     // rate of growth
     const lambdaLow = 3;
     const lambdaHigh = 5;
@@ -206,12 +205,12 @@ const chooseHeldDiamond = (freeAgentsOrUnspawned, ourTeam, state) => {
         distsDTEnnD[diamond.id] = cap(distDiamondToEnemyOfDiamond);
         distsDTEnnU[diamond.id] = cap(distDiamondToEnemyOfUs);
     }
-    const maxDistDTU = Math.max(...(Object.values(distsDTU).filter(x => Number.isFinite(x))));
+    let maxDistDTU = Math.max(...(Object.values(distsDTU).filter(x => Number.isFinite(x))));
     if (!Number.isFinite(maxDistDTU)) {
         console.log(`NO TARGET TO ANY OF ${heldDiamonds.map(d => utils_1.stringify(d.position)).join(', ')} FROM (${freeAgentsOrUnspawned === 'unspawned'}) ${ourUnitPositions.map(p => utils_1.stringify(p)).join(', ')}`);
         return null;
     }
-    console.log('AAA', maxDistDTU, Object.values(distsDTU));
+    maxDistDTU = Math.min(10, maxDistDTU);
     const scoreIfLeftUnchecked = {};
     const ourScoreIfPursued = {};
     for (let diamond of heldDiamonds) {

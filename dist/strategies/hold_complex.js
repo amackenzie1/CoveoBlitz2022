@@ -48,6 +48,7 @@ const getSafePosition = (unit, team, state, enemyPositions, provider) => {
         .map(pos => [pos, Math.min(...enemyPositions.map(pos2 => search_1.computeDistance(pos, pos2, { state, max: 3 }) || Infinity))])
         .filter(x => x[1] >= 2) //making sure we can't be attacked 
         .sort((a, b) => probSurviveVine(b[0], team, state, provider) - probSurviveVine(a[0], team, state, provider));
+    let allSafe = validPositions.filter(x => probSurviveVine(x[0], team, state, provider) == 1);
     let best = validPositions[0];
     if (!best) {
         return null;
@@ -93,12 +94,22 @@ const holdSimple = (units, team, state, provider) => {
             continue;
         }
         const result2 = getSafePosition(unit, team, state, enemyUnits, provider);
-        actions.push({
-            type: 'UNIT',
-            action: result2 ? 'MOVE' : 'DROP',
-            target: oldGetSafePosition(unit, team, state, enemyUnits)?.[0] || unit.position,
-            unitId: unit.id
-        });
+        if (result2) {
+            actions.push({
+                type: 'UNIT',
+                action: 'MOVE',
+                target: result2[0],
+                unitId: unit.id
+            });
+        }
+        else {
+            actions.push({
+                type: "UNIT",
+                action: "DROP",
+                target: utils_1.freeNeighbors(unit.position, state)[0] || unit.position,
+                unitId: unit.id
+            });
+        }
     }
     return actions;
 };

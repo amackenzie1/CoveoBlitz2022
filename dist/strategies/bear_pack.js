@@ -34,18 +34,11 @@ function oldChooseTarget(units, team, state) {
 }
 const bearPack = (units, team, state) => {
     units = units.filter(x => x.hasSpawned && !x.hasDiamond);
-    // let diamondValues: [Diamond, number][] = []
-    // for (let diamond of state.map.diamonds) {
-    //   if (team.units.find(x => x.id === diamond.ownerId)) { continue }
-    //   diamondValues.push([diamond, diamondValue(diamond)])
-    // }
-    // diamondValues.sort((x, y) => y[1] - x[1])
-    // if (!diamondValues.length) { return [] }
     const target = Linfty_prioritization_1.chooseTarget(units, team, state);
     if (!target) {
         return [];
     }
-    console.log("Target chosen!");
+    console.log("BEAR Target chosen:", utils_1.stringify(target));
     const enemyPositions = state.teams
         .filter(t => t.id !== team.id)
         .flatMap(t => t.units)
@@ -81,11 +74,11 @@ const bearPack = (units, team, state) => {
             }
         }
         const result = search_1.a_star(unit.position, target, { state, isAttack: true });
-        if (!result) {
+        if (!result || !result.endTarget) {
             continue;
         }
         // Chase the target on-foot
-        let targetDiamond = state.map.diamonds.find(d => utils_1.areEqual(d.position, result.endTarget));
+        let targetDiamond = state.map.diamonds.find(d => utils_1.areEqual(d.position, target));
         if (targetDiamond?.ownerId) {
             actions.push({
                 type: 'UNIT',

@@ -61,6 +61,7 @@ const getSafePosition = (unit: Unit, team: Team, state: GameMessage, enemyPositi
     .filter(x => x[1] >= 2) //making sure we can't be attacked 
     .sort((a, b) => probSurviveVine(b[0], team, state, provider) - probSurviveVine(a[0], team, state, provider))
 
+  let allSafe = validPositions.filter(x => probSurviveVine(x[0], team, state, provider) == 1)
   let best = validPositions[0]
   if (!best){return null}
   let bestProb = 1 - probSurviveVine(best[0], team, state, provider)
@@ -103,12 +104,23 @@ const holdSimple: Strategy = (units, team, state, provider) => {
     if (!result) { continue }
 
     const result2 = getSafePosition(unit, team, state, enemyUnits, provider)
-    actions.push({
+
+    if (result2){
+      actions.push({
         type: 'UNIT',
-        action: result2 ? 'MOVE' : 'DROP',
-        target: oldGetSafePosition(unit, team, state, enemyUnits)?.[0] || unit.position,
+        action: 'MOVE',
+        target: result2[0],
         unitId: unit.id
-    })
+      })
+    } else {
+      actions.push({
+        type: "UNIT",
+        action: "DROP",
+        target: freeNeighbors(unit.position, state)[0] || unit.position,
+        unitId: unit.id
+      })
+    }
+    
   }
   return actions
 }

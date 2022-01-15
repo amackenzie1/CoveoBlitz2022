@@ -3,7 +3,11 @@ import { dijkstra, computeDistance } from './search'
 import { areEqual, stringify } from './utils'
 
 const chooseTarget = (freeAgentsOrUnspawned: 'unspawned' | Unit[], team: Team, state: GameMessage): Position | null => {
-  return chooseDiamond(freeAgentsOrUnspawned, team, state)?.[0] || null
+  return chooseTargetWithValue(freeAgentsOrUnspawned, team, state)?.[0] || null
+}
+
+const chooseTargetWithValue = (freeAgentsOrUnspawned: 'unspawned' | Unit[], team: Team, state: GameMessage): [Position, number] | null => {
+  return chooseHeldDiamond(freeAgentsOrUnspawned, team, state) || null
 }
 
 const chooseDiamond = (freeAgentsOrUnspawned: 'unspawned' | Unit[], ourTeam: Team, state: GameMessage): [Position, number] | null => {
@@ -25,7 +29,7 @@ const chooseDiamond = (freeAgentsOrUnspawned: 'unspawned' | Unit[], ourTeam: Tea
     const t = state.teams.find(t => t.units.find(u => diamond.ownerId === u.id))
     if (t) { diamondTeams[diamond.id] = t }
   })
-  heldDiamonds = heldDiamonds.filter(d => !!diamondTeams[d.id])
+  heldDiamonds = heldDiamonds.filter(d => !!diamondTeams[d.id] && diamondTeams[d.id]!.id !== ourTeam.id)
 
   let unheldDiamonds = state.map.diamonds.filter(x => !x.ownerId)
 
@@ -63,7 +67,7 @@ const chooseDiamond = (freeAgentsOrUnspawned: 'unspawned' | Unit[], ourTeam: Tea
   }
 
   let maxDistDTU = Math.max(...(Object.values(distsDTU).filter(x => Number.isFinite(x))))
-  maxDistDTU = Number.isFinite(maxDistDTU) ? maxDistDTU : maxHorizon
+  maxDistDTU = Math.min(Number.isFinite(maxDistDTU) ? maxDistDTU : maxHorizon, 10)
 
   const scoreIfLeftUnchecked: Record<string, number> = {}
   const ourScoreIfPursued: Record<string, number> = {}
@@ -195,12 +199,8 @@ const chooseHeldDiamond = (freeAgentsOrUnspawned: 'unspawned' | Unit[], ourTeam:
     const t = state.teams.find(t => t.units.find(u => diamond.ownerId === u.id))
     if (t) { diamondTeams[diamond.id] = t }
   })
-  const l1 = heldDiamonds.length
-  heldDiamonds = heldDiamonds.filter(d => !!diamondTeams[d.id])
-  const l2 = heldDiamonds.length
-  if (l1 !== l2) {
-    console.log("WHATTT")
-  }
+  heldDiamonds = heldDiamonds.filter(d => !!diamondTeams[d.id] && diamondTeams[d.id]!.id !== ourTeam.id)
+
 
   // rate of growth
   const lambdaLow = 3
@@ -233,14 +233,13 @@ const chooseHeldDiamond = (freeAgentsOrUnspawned: 'unspawned' | Unit[], ourTeam:
     distsDTEnnU[diamond.id] = cap(distDiamondToEnemyOfUs)
   }
 
-  const maxDistDTU = Math.max(...(Object.values(distsDTU).filter(x => Number.isFinite(x))))
+  let maxDistDTU = Math.max(...(Object.values(distsDTU).filter(x => Number.isFinite(x))))
   if (!Number.isFinite(maxDistDTU)) {
     console.log(`NO TARGET TO ANY OF ${heldDiamonds.map(d => stringify(d.position)).join(', ')} FROM (${freeAgentsOrUnspawned === 'unspawned'}) ${ourUnitPositions.map(p => stringify(p)).join(', ')}`)
     return null
   }
 
-  console.log('AAA', maxDistDTU, Object.values(distsDTU))
-
+  maxDistDTU = Math.min(10, maxDistDTU)
 
   const scoreIfLeftUnchecked: Record<string, number> = {}
   const ourScoreIfPursued: Record<string, number> = {}
@@ -300,4 +299,4 @@ const chooseHeldDiamond = (freeAgentsOrUnspawned: 'unspawned' | Unit[], ourTeam:
 }
 
 
-export { chooseTarget }
+export { chooseTarget,chooseTargetWithValue }

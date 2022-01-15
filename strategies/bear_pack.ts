@@ -1,8 +1,8 @@
 import { Strategy } from '../strategy-coordinator'
 import { Action, Diamond, Unit, Team, GameMessage, Position } from '../GameInterface'
 import { a_star, SearchAlgorithmReturn, dijkstra } from "../search"
-import { freeNeighbors, hasClearLOS, areEqual, getVineRegion } from '../utils'
-import {chooseTarget } from '../Linfty_prioritization'
+import { freeNeighbors, hasClearLOS, areEqual, getVineRegion, stringify } from '../utils'
+import { chooseTarget } from '../Linfty_prioritization'
 
 function diamondValue(diamond: Diamond) {
   return diamond.summonLevel * 20 + diamond.points
@@ -41,19 +41,10 @@ function oldChooseTarget(units: Unit[], team: Team, state: GameMessage): Positio
 const bearPack: Strategy = (units, team, state) => {
   units = units.filter(x => x.hasSpawned && !x.hasDiamond)
 
-  // let diamondValues: [Diamond, number][] = []
-  // for (let diamond of state.map.diamonds) {
-  //   if (team.units.find(x => x.id === diamond.ownerId)) { continue }
-  //   diamondValues.push([diamond, diamondValue(diamond)])
-  // }
-  // diamondValues.sort((x, y) => y[1] - x[1])
-
-  // if (!diamondValues.length) { return [] }
-
   const target = chooseTarget(units, team, state)
-  
+
   if (!target) { return [] }
-  console.log("Target chosen!")
+  console.log("BEAR Target chosen:", stringify(target))
   const enemyPositions = state.teams
     .filter(t => t.id !== team.id)
     .flatMap(t => t.units)
@@ -91,12 +82,12 @@ const bearPack: Strategy = (units, team, state) => {
       }
     }
 
-    const result = a_star(unit.position, target, { state , isAttack: true})
-    if (!result) { continue }
-   
+    const result = a_star(unit.position, target, { state, isAttack: true })
+    if (!result || !result.endTarget) { continue }
+
     // Chase the target on-foot
-    let targetDiamond = state.map.diamonds.find(d => areEqual(d.position, result.endTarget))
-    if (targetDiamond?.ownerId){
+    let targetDiamond = state.map.diamonds.find(d => areEqual(d.position, target))
+    if (targetDiamond?.ownerId) {
       actions.push({
         type: 'UNIT',
         action: result.distance <= 1 ? 'ATTACK' : 'MOVE',
@@ -111,7 +102,7 @@ const bearPack: Strategy = (units, team, state) => {
         unitId: unit.id
       })
     }
-    
+
   }
   return actions
 }
