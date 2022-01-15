@@ -2,15 +2,15 @@ import { Strategy } from '../strategy-coordinator'
 import { Action, GameMessage, TileType, Diamond, Position, Unit, Team } from '../GameInterface'
 import { areEqual, stringify, freeNeighbors, getTeamsWithHigherPriorityNextRound, NEIGHBORS, add } from '../utils'
 import { computeDistance, dijkstra } from "../search"
-import {forAndrew, InsightsProvider} from "../insights"
+import { forAndrew, InsightsProvider } from "../insights"
 
 const NEIGHBORS_AND_SELF = [...NEIGHBORS, { x: 0, y: 0 }]
 
-function probVine(teamId: string, insights: InsightsProvider){
+function probVine(teamId: string, insights: InsightsProvider) {
   let vineDiamondHolder = insights.insights(teamId).vineDiamondHolder;
-  if (vineDiamondHolder === "high"){
-    return 0.3  
-  } 
+  if (vineDiamondHolder === "high") {
+    return 0.3
+  }
   return 0.1
 }
 
@@ -22,11 +22,11 @@ function probSurviveVine(unitPosition: Position, team: Team, state: GameMessage,
     .filter(u => !u.hasDiamond && u.hasSpawned)
     .map(u => ([u.position, u.teamId]) as [Position, string])
 
-  const enemyPositionRecord : Record<string, string> = {}
+  const enemyPositionRecord: Record<string, string> = {}
   for (let [pos, teamId] of enemyPositions) {
     enemyPositionRecord[stringify(pos)] = teamId
   }
-  
+
   let probSurvival = 1
 
   for (let direction of NEIGHBORS) {
@@ -54,25 +54,47 @@ const oldGetSafePosition = (unit: Unit, team: Team, state: GameMessage, enemyPos
   return validPositions[0] || null
 }
 
+function getBestOutOfTotallySafe(totallySafe: Position[], enemyUnits: Position[], state: GameMessage) {
+  let bestValue;
+  let bestPosition;
+  for (let pos of totallySafe) {
+    const value = computeDistance(enemyUnits, pos, { state }) || Infinity
+    if (!bestValue || value > bestValue) {
+      bestValue = value
+      bestPosition = pos
+    }
+  }
 
+  return bestPosition
+}
 const getSafePosition = (unit: Unit, team: Team, state: GameMessage, enemyPositions: Position[], provider: InsightsProvider): [Position, number] | null => {
   const validPositions = freeNeighbors(unit.position, state)
     .map<[Position, number]>(pos => [pos, Math.min(...enemyPositions.map(pos2 => computeDistance(pos, pos2, { state, max: 3 }) || Infinity))])
     .filter(x => x[1] >= 2) //making sure we can't be attacked 
     .sort((a, b) => probSurviveVine(b[0], team, state, provider) - probSurviveVine(a[0], team, state, provider))
 
-  let allSafe = validPositions.filter(x => probSurviveVine(x[0], team, state, provider) == 1)
+  let totallySafe = validPositions.filter((x) => probSurviveVine(x[0], team, state, provider) >= 0.8).map((x) => x[0])
   let best = validPositions[0]
-  if (!best){return null}
+  if (totallySafe.length) {
+    const enemyUnits = state.teams
+      .filter(t => t.id !== team.id)
+      .flatMap(t => t.units)
+      .filter(u => u.hasSpawned && !u.hasDiamond)
+      .map(u => u.position)
+    best = [getBestOutOfTotallySafe(totallySafe, enemyUnits, state)!, 1]
+    console.log("Totally safe!")
+  }
+
+  if (!best) { return null }
   let bestProb = 1 - probSurviveVine(best[0], team, state, provider)
   let diamond = state.map.diamonds.find(d => d.ownerId === unit.id)
   let value = diamond?.points || 0
   let summonLevel = diamond?.summonLevel || 1;
-  let n = value/summonLevel;
+  let n = value / summonLevel;
   let probDrop = forAndrew(n, bestProb)
   console.log(`Probability of getting vined: ${bestProb}, probability of dropping: ${probDrop}`)
   //with probability probDrop return null 
-  if (Math.random() < probDrop){return null}
+  if (Math.random() < probDrop) { return null }
   return best
 }
 
@@ -105,7 +127,7 @@ const holdSimple: Strategy = (units, team, state, provider) => {
 
     const result2 = getSafePosition(unit, team, state, enemyUnits, provider)
 
-    if (result2){
+    if (result2) {
       actions.push({
         type: 'UNIT',
         action: 'MOVE',
@@ -120,7 +142,7 @@ const holdSimple: Strategy = (units, team, state, provider) => {
         unitId: unit.id
       })
     }
-    
+
   }
   return actions
 }
